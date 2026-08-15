@@ -46,6 +46,10 @@ projectRoute.delete(
   removeProject,
 );
 
-projectRoute.get("/:id/summary", validate({ params: projectParams }), getProjectSummary);
+projectRoute.get(
+  "/:id/summary",
+  validate({ params: projectParams }),
+  getProjectSummary,
+);
 
 export default projectRoute;

@@ -1,5 +1,27 @@
 import { prisma } from "../lib/prisma.js";
 
+// ─────────────────────────────────────────────────────────────
+// Reads
+// ─────────────────────────────────────────────────────────────
+
+export const findUserById = async (id) => {
+  const user = await prisma.user.findUnique({
+    where: { id },
+  });
+  return user;
+};
+
+export const findUserByEmail = async (email) => {
+  const user = await prisma.user.findFirst({
+    where: { email },
+  });
+  return user;
+};
+
+// ─────────────────────────────────────────────────────────────
+// Writes
+// ─────────────────────────────────────────────────────────────
+
 export const createUSer = async (
   firstname,
   lastname,
@@ -21,18 +43,4 @@ export const createUSer = async (
     },
   });
   return newUser;
-};
-
-export const findUserById = async (id) => {
-  const user = await prisma.user.findUnique({
-    where: { id },
-  });
-  return user;
-};
-
-export const findUserByEmail = async (email) => {
-  const user = await prisma.user.findFirst({
-    where: { email },
-  });
-  return user;
 };

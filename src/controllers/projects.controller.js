@@ -2,7 +2,6 @@ import createHttpError from "http-errors";
 import {
   buildProjectScope,
   canAccessProject,
-  companyExists,
   createProject,
   deleteProject,
   findProjectById,
@@ -11,6 +10,7 @@ import {
   getProjectStats,
   updateProject,
 } from "../services/projects.service.js";
+import { companyExists } from "../services/companies.service.js";
 import { buildPagination } from "../utils/query.js";
 
 // ─────────────────────────────────────────────────────────────
@@ -33,7 +33,10 @@ const loadAccessibleProject = async (user, id) => {
   if (!project) throw createHttpError(404, "Project not found");
 
   if (!(await canAccessProject(user, project))) {
-    throw createHttpError(403, "Forbidden: you are not a member of this project");
+    throw createHttpError(
+      403,
+      "Forbidden: you are not a member of this project",
+    );
   }
   return project;
 };
@@ -49,7 +52,8 @@ const assertCompanyExists = async (clientCompanyId) => {
 // ─────────────────────────────────────────────────────────────
 
 export async function listProjects(req, res) {
-  const { page, limit, skip, orderBy, q, status, clientCompanyId } = req.valid.query;
+  const { page, limit, skip, orderBy, q, status, clientCompanyId } =
+    req.valid.query;
 
   const where = { ...(await buildProjectScope(req.user)) };
 
@@ -62,7 +66,11 @@ export async function listProjects(req, res) {
   if (status) where.status = status;
   if (clientCompanyId) where.clientCompanyId = clientCompanyId;
 
-  const { projects, total } = await findProjects(where, { skip, limit, orderBy });
+  const { projects, total } = await findProjects(where, {
+    skip,
+    limit,
+    orderBy,
+  });
 
   res.status(200).json({
     data: projects.map((project) => toProjectResponse(project, req.user.role)),
@@ -119,7 +127,10 @@ export async function editProject(req, res) {
 
   // A PM may only edit a project they belong to; ADMIN may edit any.
   if (!(await canAccessProject(req.user, existing))) {
-    throw createHttpError(403, "Forbidden: you are not a member of this project");
+    throw createHttpError(
+      403,
+      "Forbidden: you are not a member of this project",
+    );
   }
 
   if (data.clientCompanyId !== undefined) {
@@ -129,7 +140,8 @@ export async function editProject(req, res) {
   // One date sent, the other kept — compare against what is stored
   const start = data.startDate ?? existing.startDate;
   const end = data.endDate ?? existing.endDate;
-  if (end < start) throw createHttpError(400, "endDate must be after startDate");
+  if (end < start)
+    throw createHttpError(400, "endDate must be after startDate");
 
   const project = await updateProject(id, data);
 
