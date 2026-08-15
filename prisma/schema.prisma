@@ -1,0 +1,371 @@
+// BuildTrack — Construction Project Management System
+// Prisma schema · PostgreSQL
+//
+// Convention: models/fields are camelCase in code, snake_case in the database
+// (via @map / @@map) so this schema matches cc23-er-digram.drawio exactly.
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ─────────────────────────────────────────────────────────────
+// Enums
+// ─────────────────────────────────────────────────────────────
+
+enum CompanyType {
+  OWNER
+  CONTRACTOR
+  SUBCONTRACTOR
+}
+
+enum UserRole {
+  ADMIN
+  PROJECT_MANAGER
+  STAFF
+  CLIENT
+}
+
+enum ProjectStatus {
+  PLANNING
+  IN_PROGRESS
+  ON_HOLD
+  COMPLETED
+}
+
+enum TaskStatus {
+  TODO
+  IN_PROGRESS
+  REVIEW
+  APPROVED
+  COMPLETED
+}
+
+enum Priority {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+enum IssueStatus {
+  OPEN
+  INVESTIGATING
+  RESOLVED
+}
+
+enum DocType {
+  DRAWING
+  CONTRACT
+  BOQ
+  PHOTO
+  REPORT
+  OTHER
+}
+
+enum ExpenseCategory {
+  MATERIAL
+  LABOR
+  EQUIPMENT
+  OTHER
+}
+
+enum Weather {
+  SUNNY
+  CLOUDY
+  RAINY
+  STORMY
+}
+
+enum NotificationType {
+  TASK_ASSIGNED
+  ISSUE_REPORTED
+  DEADLINE_NEAR
+  COMMENT_ADDED
+}
+
+// ─────────────────────────────────────────────────────────────
+// Company & User
+// ─────────────────────────────────────────────────────────────
+
+model Company {
+  id           Int         @id @default(autoincrement())
+  name         String
+  type         CompanyType
+  contactEmail String?     @map("contact_email")
+  contactPhone String?     @map("contact_phone")
+
+  users          User[]
+  clientProjects Project[] @relation("ClientCompany")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("company")
+}
+
+model User {
+  id           Int      @id @default(autoincrement())
+  companyId    Int?     @map("company_id")
+  firstname    String
+  lastname     String
+  email        String   @unique
+  passwordHash String   @map("password_hash")
+  role         UserRole @default(STAFF)
+  phone        String?
+
+  // A user belongs to a company. Restrict: a company with staff cannot be deleted.
+  company Company? @relation(fields: [companyId], references: [id], onDelete: Restrict)
+
+  projectMembers ProjectMember[]
+  assignedTasks  Task[]          @relation("TaskAssignee")
+  comments       Comment[]
+  documents      Document[]      @relation("DocumentUploader")
+  dailyReports   DailyReport[]   @relation("ReportAuthor")
+  expenses       Expense[]       @relation("ExpenseRecorder")
+  reportedIssues Issue[]         @relation("IssueReporter")
+  assignedIssues Issue[]         @relation("IssueAssignee")
+  notifications  Notification[]
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@index([companyId])
+  @@map("user")
+}
+
+// ─────────────────────────────────────────────────────────────
+// Project
+// ─────────────────────────────────────────────────────────────
+
+model Project {
+  id              Int           @id @default(autoincrement())
+  clientCompanyId Int           @map("client_company_id")
+  name            String
+  location        String?
+  description     String?
+  startDate       DateTime      @map("start_date")
+  endDate         DateTime      @map("end_date")
+  status          ProjectStatus @default(PLANNING)
+  budget          Decimal       @db.Decimal(14, 2)
+
+  clientCompany Company @relation("ClientCompany", fields: [clientCompanyId], references: [id], onDelete: Restrict)
+
+  members      ProjectMember[]
+  tasks        Task[]
+  documents    Document[]
+  dailyReports DailyReport[]
+  expenses     Expense[]
+  issues       Issue[]
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@index([clientCompanyId])
+  @@index([status])
+  @@map("project")
+}
+
+model ProjectMember {
+  id            Int      @id @default(autoincrement())
+  projectId     Int      @map("project_id")
+  userId        Int      @map("user_id")
+  roleInProject String   @map("role_in_project") // free text: "Site Engineer", "Architect", "Foreman"
+  joinedAt      DateTime @default(now()) @map("joined_at")
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([projectId, userId]) // a user joins a project once
+  @@index([userId])
+  @@map("project_member")
+}
+
+// ─────────────────────────────────────────────────────────────
+// Task
+// ─────────────────────────────────────────────────────────────
+
+model Task {
+  id               Int        @id @default(autoincrement())
+  projectId        Int        @map("project_id")
+  parentTaskId     Int?       @map("parent_task_id")
+  assignedToUserId Int?       @map("assigned_to_user_id")
+  name             String
+  description      String?
+  status           TaskStatus @default(TODO)
+  priority         Priority   @default(MEDIUM)
+  progressPercent  Int        @default(0) @map("progress_percent") // 0-100, validated in Zod
+  startDate        DateTime?  @map("start_date")
+  dueDate          DateTime?  @map("due_date")
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  // Self-relation: deleting a parent task deletes its sub-tasks (WBS behaviour)
+  parentTask Task?  @relation("TaskHierarchy", fields: [parentTaskId], references: [id], onDelete: Cascade)
+  subTasks   Task[] @relation("TaskHierarchy")
+
+  // SetNull: removing a user leaves the task in place, unassigned
+  assignedTo User? @relation("TaskAssignee", fields: [assignedToUserId], references: [id], onDelete: SetNull)
+
+  comments  Comment[]
+  documents Document[]
+  expenses  Expense[]
+  issues    Issue[]
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@index([projectId, status])
+  @@index([assignedToUserId])
+  @@index([parentTaskId])
+  @@index([dueDate])
+  @@map("task")
+}
+
+// ─────────────────────────────────────────────────────────────
+// Collaboration
+// ─────────────────────────────────────────────────────────────
+
+model Comment {
+  id         Int    @id @default(autoincrement())
+  userId     Int    @map("user_id")
+  taskId     Int?   @map("task_id")
+  documentId Int?   @map("document_id")
+  content    String
+
+  user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  task     Task?     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  document Document? @relation(fields: [documentId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // NOTE: exactly one of taskId / documentId must be set.
+  // Prisma cannot express this — enforce it in the service layer,
+  // or add a CHECK constraint via a manual migration.
+  @@index([taskId])
+  @@index([documentId])
+  @@map("comment")
+}
+
+model Document {
+  id           Int     @id @default(autoincrement())
+  projectId    Int     @map("project_id")
+  taskId       Int?    @map("task_id")
+  uploadedById Int     @map("uploaded_by")
+  docType      DocType @default(OTHER) @map("doc_type")
+  fileName     String  @map("file_name")
+  fileUrl      String  @map("file_url")
+
+  project    Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  task       Task?   @relation(fields: [taskId], references: [id], onDelete: SetNull)
+  uploadedBy User    @relation("DocumentUploader", fields: [uploadedById], references: [id], onDelete: Restrict)
+
+  comments Comment[]
+
+  uploadedAt DateTime @default(now()) @map("uploaded_at")
+
+  @@index([projectId, docType])
+  @@index([taskId])
+  @@map("document")
+}
+
+// ─────────────────────────────────────────────────────────────
+// Site operations
+// ─────────────────────────────────────────────────────────────
+
+model DailyReport {
+  id            Int      @id @default(autoincrement())
+  projectId     Int      @map("project_id")
+  reportedById  Int      @map("reported_by")
+  reportDate    DateTime @map("report_date") @db.Date
+  weather       Weather
+  manpowerCount Int      @map("manpower_count")
+  workSummary   String   @map("work_summary")
+  issues        String?
+
+  project    Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  reportedBy User    @relation("ReportAuthor", fields: [reportedById], references: [id], onDelete: Restrict)
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@unique([projectId, reportDate, reportedById]) // one report per person per site per day
+  @@index([projectId, reportDate])
+  @@map("daily_report")
+}
+
+model Issue {
+  id           Int         @id @default(autoincrement())
+  projectId    Int         @map("project_id")
+  taskId       Int?        @map("task_id")
+  reportedById Int         @map("reported_by")
+  assignedToId Int?        @map("assigned_to")
+  title        String
+  description  String
+  priority     Priority    @default(MEDIUM)
+  status       IssueStatus @default(OPEN)
+  resolvedAt   DateTime?   @map("resolved_at")
+
+  project    Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  task       Task?   @relation(fields: [taskId], references: [id], onDelete: SetNull)
+  reportedBy User    @relation("IssueReporter", fields: [reportedById], references: [id], onDelete: Restrict)
+  assignedTo User?   @relation("IssueAssignee", fields: [assignedToId], references: [id], onDelete: SetNull)
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@index([projectId, status])
+  @@index([assignedToId])
+  @@map("issue")
+}
+
+// ─────────────────────────────────────────────────────────────
+// Money
+// ─────────────────────────────────────────────────────────────
+
+model Expense {
+  id           Int             @id @default(autoincrement())
+  projectId    Int             @map("project_id")
+  taskId       Int?            @map("task_id")
+  recordedById Int             @map("recorded_by")
+  category     ExpenseCategory
+  description  String
+  amount       Decimal         @db.Decimal(14, 2) // never Float for money
+  spentAt      DateTime        @map("spent_at") @db.Date
+
+  project    Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  task       Task?   @relation(fields: [taskId], references: [id], onDelete: SetNull)
+  recordedBy User    @relation("ExpenseRecorder", fields: [recordedById], references: [id], onDelete: Restrict)
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@index([projectId, category])
+  @@index([spentAt])
+  @@map("expense")
+}
+
+// ─────────────────────────────────────────────────────────────
+// Notification
+// ─────────────────────────────────────────────────────────────
+
+model Notification {
+  id      Int              @id @default(autoincrement())
+  userId  Int              @map("user_id")
+  type    NotificationType
+  message String
+  linkUrl String?          @map("link_url")
+  isRead  Boolean          @default(false) @map("is_read")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([userId, isRead])
+  @@map("notification")
+}
