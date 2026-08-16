@@ -1,4 +1,4 @@
-import { createUSer, findUserByEmail } from "../services/users.service.js";
+import { createUser, findUserByEmail } from "../services/users.service.js";
 import createHttpError from "http-errors";
 import argon2 from "argon2";
 import { createToken } from "../utils/jwt.js";
@@ -13,15 +13,15 @@ export async function registerUser(req, res, next) {
     throw next(createHttpError(400, "user is already exist"));
   }
   const hashPassword = await argon2.hash(password);
-  const newUser = await createUSer(
+  const newUser = await createUser({
     firstname,
     lastname,
     email,
-    hashPassword,
+    passwordHash: hashPassword,
     phone,
     role,
     companyId,
-  );
+  });
   res.status(201).json({
     message: "Register Successfully",
     data: newUser,
