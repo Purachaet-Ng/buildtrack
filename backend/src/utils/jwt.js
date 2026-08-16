@@ -1,5 +1,12 @@
 import jwt from "jsonwebtoken";
-export const createToken = async (user) => {
+
+// Fail at boot rather than 500-ing on every login. `server.js` loads dotenv
+// before importing the app, so the env is populated by the time this runs.
+if (!process.env.JWT_SECRET) {
+  throw new Error("JWT_SECRET is not set — check your .env");
+}
+
+export const createToken = (user) => {
   const { id, email, role } = user;
   const payload = {
     id,

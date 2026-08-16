@@ -58,8 +58,10 @@ Authorization: Bearer <token>
 | ------ | -------- | ----------- | ---- |
 | POST | `/auth/register` | สมัครสมาชิก | Public |
 | POST | `/auth/login` | เข้าสู่ระบบ | Public |
-| POST | `/auth/logout` | ออกจากระบบ | All |
-| GET | `/auth/me` | ดูข้อมูลผู้ใช้ที่ login อยู่ | All |
+
+> **หมายเหตุ**
+> - ไม่มี `/auth/logout` — token เป็น stateless JWT (อายุ 1 วัน) ฝั่ง frontend ลบ token ทิ้งเองได้เลย
+> - ดูข้อมูลผู้ใช้ที่ login อยู่ ใช้ `GET /users/me` (ไม่มี `/auth/me` ซ้ำ)
 
 ---
 
@@ -268,12 +270,14 @@ Authorization: Bearer <token>
   "firstname": "Purachaet",
   "lastname": "Ng",
   "email": "purachaet@email.com",
-  "password": "123456",
-  "phone": "0812345678",
-  "role": "STAFF",
-  "companyId": 1
+  "password": "password123",
+  "phone": "0812345678"
 }
 ```
+
+> `password` ต้องยาวอย่างน้อย 8 ตัวอักษร
+> `role` และ `companyId` **ส่งมาไม่ได้** — สมัครเองได้ role `STAFF` เท่านั้น
+> ADMIN เป็นคนกำหนด role / company ให้ทีหลังผ่าน `PATCH /users/:id`
 
 ### Success Response (201)
 
@@ -310,7 +314,7 @@ Authorization: Bearer <token>
 ```json
 {
   "email": "purachaet@email.com",
-  "password": "123456"
+  "password": "password123"
 }
 ```
 
@@ -323,6 +327,8 @@ Authorization: Bearer <token>
   "user": {
     "id": 1,
     "firstname": "Purachaet",
+    "lastname": "Ng",
+    "email": "purachaet@email.com",
     "role": "STAFF"
   }
 }
@@ -569,6 +575,7 @@ KPI cards หน้าแรก
 | Method | Endpoint | Description |
 | ------ | -------- | ----------- |
 | POST | `/auth/refresh` | ต่ออายุ token |
+| POST | `/auth/logout` | ยกเลิก token ทันที (ต้องมี denylist table) |
 | GET | `/projects/:id/gantt` | ข้อมูล Gantt chart |
 | GET | `/reports/export` | ส่งออก PDF / Excel / CSV |
 | GET | `/materials` | จัดการวัสดุ / อุปกรณ์ |
