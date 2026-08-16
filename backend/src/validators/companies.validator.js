@@ -15,7 +15,7 @@ const positiveId = (message) =>
   z.coerce.number({ error: message }).int(message).positive(message);
 
 const phoneRegex = /^(?:\+66|0)[689]\d{2}[- ]?\d{3}[- ]?\d{3}$/;
-ฤ;
+
 const type = z.enum(COMPANY_TYPES, {
   error: `role must be one of ${COMPANY_TYPES.join(", ")}`,
 });

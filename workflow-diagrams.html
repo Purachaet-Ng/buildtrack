@@ -1,0 +1,705 @@
+<title>BuildTrack — ผังการใช้งาน User & Admin</title>
+
+<style>
+  :root {
+    --ground:   #E4E9ED;
+    --paper:    #FCFDFD;
+    --ink:      #111820;
+    --muted:    #5C6C79;
+    --faint:    #8B99A5;
+    --rule:     #C6D0D8;
+    --rule-2:   #DDE4E9;
+    --blue:     #1F5C99;
+    --blue-wash:#E8F0F8;
+    --amber:    #B8760A;
+    --amber-wash:#FBF0DB;
+    --red:      #B93A34;
+    --red-wash: #FAEAE8;
+    --green:    #2A7255;
+    --green-wash:#E5F1EB;
+
+    --display: "Bahnschrift", "DIN Alternate", "Arial Narrow", "Leelawadee UI", system-ui, sans-serif;
+    --body: "Leelawadee UI", "Noto Sans Thai", "Segoe UI", system-ui, sans-serif;
+    --mono: "Cascadia Mono", "Consolas", ui-monospace, monospace;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background-color: var(--ground);
+    background-image:
+      linear-gradient(to right, rgba(31,92,153,.055) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(31,92,153,.055) 1px, transparent 1px);
+    background-size: 26px 26px;
+    color: var(--ink);
+    font-family: var(--body);
+    font-size: 16px;
+    line-height: 1.65;
+    padding: 32px 20px 72px;
+  }
+
+  .wrap {
+    max-width: 1120px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 26px;
+  }
+
+  /* ---------- masthead: engineering title block ---------- */
+
+  .masthead {
+    background: var(--paper);
+    border: 1.5px solid var(--ink);
+    padding: 0;
+  }
+  .masthead-top {
+    padding: 26px 28px 22px;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 18px;
+  }
+  .masthead h1 {
+    font-family: var(--display);
+    font-size: clamp(30px, 5vw, 46px);
+    line-height: 1.05;
+    letter-spacing: .01em;
+    margin: 0;
+    text-wrap: balance;
+  }
+  .masthead h1 span {
+    display: block;
+    font-size: .42em;
+    letter-spacing: .18em;
+    text-transform: uppercase;
+    color: var(--blue);
+    margin-bottom: 10px;
+  }
+  .masthead p {
+    margin: 0;
+    max-width: 40ch;
+    color: var(--muted);
+    font-size: 14.5px;
+  }
+
+  .titleblock {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    border-top: 1.5px solid var(--ink);
+  }
+  .titleblock div {
+    padding: 11px 16px 13px;
+    border-right: 1px solid var(--rule);
+  }
+  .titleblock div:last-child { border-right: 0; }
+  .titleblock dt {
+    font-family: var(--display);
+    font-size: 10.5px;
+    letter-spacing: .16em;
+    text-transform: uppercase;
+    color: var(--faint);
+    margin: 0 0 3px;
+  }
+  .titleblock dd {
+    margin: 0;
+    font-family: var(--mono);
+    font-size: 13px;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* ---------- legend ---------- */
+
+  .legend {
+    background: var(--paper);
+    border: 1px solid var(--rule);
+    padding: 18px 22px 20px;
+  }
+  .legend h2 {
+    font-family: var(--display);
+    font-size: 11px;
+    letter-spacing: .18em;
+    text-transform: uppercase;
+    color: var(--faint);
+    margin: 0 0 14px;
+  }
+  .legend ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+    gap: 12px 24px;
+  }
+  .legend li {
+    display: flex;
+    align-items: center;
+    gap: 11px;
+    font-size: 14px;
+  }
+  .legend svg { flex: 0 0 auto; }
+
+  /* ---------- sheets ---------- */
+
+  .sheet {
+    background: var(--paper);
+    border: 1px solid var(--rule);
+    display: flex;
+    flex-direction: column;
+  }
+
+  .sheet-head {
+    display: grid;
+    grid-template-columns: 74px 1fr auto;
+    align-items: stretch;
+    border-bottom: 1.5px solid var(--ink);
+  }
+  .sheet-no {
+    font-family: var(--display);
+    font-size: 27px;
+    font-variant-numeric: tabular-nums;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--ink);
+    color: var(--paper);
+    letter-spacing: .02em;
+  }
+  .sheet-title {
+    padding: 12px 20px 13px;
+    border-right: 1px solid var(--rule);
+    min-width: 0;
+  }
+  .sheet-title h2 {
+    margin: 0;
+    font-size: 19px;
+    font-weight: 600;
+    line-height: 1.3;
+  }
+  .sheet-title p {
+    margin: 2px 0 0;
+    font-size: 13.5px;
+    color: var(--muted);
+  }
+  .sheet-meta {
+    padding: 12px 20px 13px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 6px;
+  }
+  .roles { display: flex; gap: 5px; flex-wrap: wrap; }
+  .role {
+    font-family: var(--display);
+    font-size: 10.5px;
+    letter-spacing: .13em;
+    text-transform: uppercase;
+    padding: 3px 8px;
+    border: 1px solid currentColor;
+    white-space: nowrap;
+  }
+  .role.admin  { color: var(--ink); }
+  .role.pm     { color: var(--blue); }
+  .role.eng    { color: var(--amber); }
+  .role.client { color: var(--green); }
+  .sheet-meta small {
+    font-family: var(--mono);
+    font-size: 11.5px;
+    color: var(--faint);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .diagram {
+    overflow-x: auto;
+    padding: 26px 20px 20px;
+  }
+  /* never let a diagram shrink below a legible size — scroll the container instead */
+  .mermaid { margin: 0; min-width: 700px; }
+  .mermaid svg { display: block; margin: 0 auto; height: auto; }
+
+  /* ---------- notes ---------- */
+
+  .notes {
+    border-top: 1px solid var(--rule-2);
+    padding: 16px 22px 20px;
+    background: linear-gradient(to bottom, rgba(31,92,153,.028), transparent 60%);
+  }
+  .notes h3 {
+    font-family: var(--display);
+    font-size: 11px;
+    letter-spacing: .18em;
+    text-transform: uppercase;
+    color: var(--faint);
+    margin: 0 0 11px;
+  }
+  .notes ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 9px; }
+  .notes li {
+    display: grid;
+    grid-template-columns: 62px 1fr;
+    gap: 12px;
+    align-items: start;
+    font-size: 14.5px;
+    line-height: 1.55;
+  }
+  .tag {
+    font-family: var(--display);
+    font-size: 10px;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    text-align: center;
+    padding: 3px 0 4px;
+    margin-top: 2px;
+    color: var(--paper);
+    background: var(--faint);
+  }
+  .tag.block { background: var(--red); }
+  .tag.rule  { background: var(--blue); }
+  .tag.warn  { background: var(--amber); }
+  code {
+    font-family: var(--mono);
+    font-size: .88em;
+    background: var(--blue-wash);
+    color: var(--blue);
+    padding: 1px 5px;
+    border-radius: 2px;
+    white-space: nowrap;
+  }
+
+  footer {
+    border-top: 1.5px solid var(--ink);
+    padding-top: 16px;
+    font-size: 13.5px;
+    color: var(--muted);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 22px;
+  }
+  footer b { color: var(--ink); font-weight: 600; }
+
+  @media (max-width: 640px) {
+    body { padding: 18px 12px 48px; }
+    .titleblock { grid-template-columns: repeat(2, 1fr); }
+    .titleblock div:nth-child(2) { border-right: 0; }
+    .titleblock div:nth-child(1), .titleblock div:nth-child(2) { border-bottom: 1px solid var(--rule); }
+    .sheet-head { grid-template-columns: 56px 1fr; }
+    .sheet-meta { grid-column: 1 / -1; border-top: 1px solid var(--rule); flex-direction: row; align-items: center; justify-content: space-between; }
+    .sheet-title { border-right: 0; }
+    .notes li { grid-template-columns: 54px 1fr; }
+  }
+</style>
+
+<div class="wrap">
+
+  <header class="masthead">
+    <div class="masthead-top">
+      <h1><span>BuildTrack</span>ผังการใช้งาน<br>User &amp; Admin</h1>
+      <p>ผังลำดับการใช้งานจริงของแต่ละ role ตั้งแต่กดปุ่มแรกจนจบงาน — ทุกกล่องผูกกับ endpoint ใน <code>APIs.md</code> ใช้เป็นแบบสำหรับต่อหน้าจอและเขียน integration test</p>
+    </div>
+    <dl class="titleblock">
+      <div><dt>Project</dt><dd>BuildTrack API v1</dd></div>
+      <div><dt>Sheets</dt><dd>6</dd></div>
+      <div><dt>Roles</dt><dd>ADMIN · PM · ENG · CLIENT</dd></div>
+      <div><dt>Base URL</dt><dd>/api/v1</dd></div>
+    </dl>
+  </header>
+
+  <section class="legend">
+    <h2>สัญลักษณ์ในผัง</h2>
+    <ul>
+      <li>
+        <svg width="46" height="26" viewBox="0 0 46 26" role="img" aria-label="รูปแคปซูล"><rect x="1" y="1" width="44" height="24" rx="12" fill="#E8F0F8" stroke="#1F5C99" stroke-width="1.5"/></svg>
+        จุดเริ่มต้น / จุดจบ
+      </li>
+      <li>
+        <svg width="46" height="26" viewBox="0 0 46 26" role="img" aria-label="สี่เหลี่ยม"><rect x="1" y="1" width="44" height="24" fill="#FCFDFD" stroke="#8B99A5" stroke-width="1.5"/></svg>
+        สิ่งที่<b>ผู้ใช้</b>ทำ
+      </li>
+      <li>
+        <svg width="46" height="26" viewBox="0 0 46 26" role="img" aria-label="สี่เหลี่ยมสองชั้น"><rect x="1" y="1" width="44" height="24" fill="#E8F0F8" stroke="#1F5C99" stroke-width="1.5"/><line x1="6" y1="1" x2="6" y2="25" stroke="#1F5C99" stroke-width="1.5"/><line x1="40" y1="1" x2="40" y2="25" stroke="#1F5C99" stroke-width="1.5"/></svg>
+        สิ่งที่<b>ระบบ</b>ทำเอง
+      </li>
+      <li>
+        <svg width="46" height="26" viewBox="0 0 46 26" role="img" aria-label="สี่เหลี่ยมข้าวหลามตัด"><polygon points="23,2 44,13 23,24 2,13" fill="#FBF0DB" stroke="#B8760A" stroke-width="1.5"/></svg>
+        จุดตัดสินใจ
+      </li>
+      <li>
+        <svg width="46" height="26" viewBox="0 0 46 26" role="img" aria-label="สี่เหลี่ยมสีแดง"><rect x="1" y="1" width="44" height="24" fill="#FAEAE8" stroke="#B93A34" stroke-width="1.5"/></svg>
+        Error / Toast แจ้งเตือน
+      </li>
+      <li>
+        <svg width="46" height="26" viewBox="0 0 46 26" role="img" aria-label="ลูกศรมีป้ายกำกับ"><line x1="2" y1="13" x2="36" y2="13" stroke="#7A8894" stroke-width="1.5"/><polygon points="44,13 34,8.5 34,17.5" fill="#7A8894"/></svg>
+        ป้ายบนลูกศร = เงื่อนไข / status code
+      </li>
+    </ul>
+  </section>
+
+  <!-- ══════════════════════ SHEET 01 ══════════════════════ -->
+  <section class="sheet">
+    <div class="sheet-head">
+      <div class="sheet-no">01</div>
+      <div class="sheet-title">
+        <h2>เข้าสู่ระบบ และแยกเส้นทางตามสิทธิ์</h2>
+        <p>ผังตั้งต้นของทุก role — สมัคร เข้าสู่ระบบ แล้วระบบพาไปหน้าตาม <code>role</code></p>
+      </div>
+      <div class="sheet-meta">
+        <div class="roles">
+          <span class="role admin">Admin</span><span class="role pm">PM</span><span class="role eng">Eng</span><span class="role client">Client</span>
+        </div>
+        <small>5 endpoints</small>
+      </div>
+    </div>
+    <div class="diagram">
+<pre class="mermaid">
+%%{init:{"theme":"base","flowchart":{"rankSpacing":34,"nodeSpacing":26,"padding":8},"themeVariables":{"fontFamily":"Leelawadee UI, Segoe UI, sans-serif","fontSize":"14px","lineColor":"#7A8894","primaryColor":"#FCFDFD","primaryBorderColor":"#8B99A5","primaryTextColor":"#111820","edgeLabelBackground":"#FCFDFD"}}}%%
+flowchart TD
+  S(["เริ่ม — เปิดแอป"]) --> Q1{"มีบัญชีผู้ใช้แล้วหรือยัง?"}
+
+  Q1 --&gt;|"ยังไม่มี"| R1["กดปุ่ม ลงทะเบียน"]
+  R1 --> R2[["ระบบพาไปหน้าสมัครสมาชิก"]]
+  R2 --> R3["กรอก ชื่อ · นามสกุล · อีเมล · เบอร์โทร · รหัสผ่าน"]
+  R3 --> R4["กดยืนยันลงทะเบียน&lt;br/&gt;POST /auth/register"]
+  R4 --> Q2{"สมัครสำเร็จไหม?"}
+  Q2 --&gt;|"ไม่สำเร็จ · 409"| E1["Toast: อีเมลนี้ถูกใช้งานแล้ว"]
+  E1 --> R3
+  Q2 --&gt;|"สำเร็จ · 201"| L1
+
+  Q1 --&gt;|"มีแล้ว"| L1["กรอกอีเมล + รหัสผ่าน"]
+  L1 --> L2["กดปุ่ม เข้าสู่ระบบ&lt;br/&gt;POST /auth/login"]
+  L2 --> Q3{"อีเมลและรหัสผ่านถูกต้องไหม?"}
+  Q3 --&gt;|"ไม่ถูกต้อง · 401"| E2["Toast: อีเมลหรือรหัสผ่านไม่ถูกต้อง"]
+  E2 --> L1
+  Q3 --&gt;|"ถูกต้อง · 200"| T1[["เก็บ token ลง auth store&lt;br/&gt;GET /auth/me"]]
+  T1 --> Q4{"role ของผู้ใช้คืออะไร?"}
+
+  Q4 --&gt;|"ADMIN"| D1["Admin Console"]
+  Q4 --&gt;|"PROJECT_MANAGER"| D2["PM Workspace"]
+  Q4 --&gt;|"STAFF"| D3["หน้างานของฉัน"]
+  Q4 --&gt;|"CLIENT"| D4["Client Portal"]
+
+  D1 --> H
+  D2 --> H
+  D3 --> H
+  D4 --> H
+  H[["โหลดหน้าแรก&lt;br/&gt;GET /dashboard/summary&lt;br/&gt;GET /notifications?isRead=false"]] --> EN(["เข้าใช้งานระบบ"])
+
+  classDef st fill:#E8F0F8,stroke:#1F5C99,stroke-width:1.5px,color:#123A5E
+  classDef sys fill:#E8F0F8,stroke:#1F5C99,stroke-width:1.5px,color:#123A5E
+  classDef dec fill:#FBF0DB,stroke:#B8760A,stroke-width:1.5px,color:#5B3D00
+  classDef err fill:#FAEAE8,stroke:#B93A34,stroke-width:1.5px,color:#7A231E
+  classDef dest fill:#E5F1EB,stroke:#2A7255,stroke-width:1.5px,color:#174936
+  class S,EN st
+  class R2,T1,H sys
+  class Q1,Q2,Q3,Q4 dec
+  class E1,E2 err
+  class D1,D2,D3,D4 dest
+</pre>
+    </div>
+    <div class="notes">
+      <h3>หมายเหตุประจำผัง</h3>
+      <ul>
+        <li><span class="tag warn">ช่องโหว่</span><div><code>POST /auth/register</code> เป็น public และรับ <code>role</code> จาก body — ตอนนี้ใครก็สมัครเป็น <code>ADMIN</code> ได้ ให้ fix โดยบังคับ <code>role</code> เป็น <code>STAFF</code> ที่ service แล้วให้ ADMIN เลื่อนสิทธิ์ผ่าน <code>PATCH /users/:id</code> แทน</div></li>
+        <li><span class="tag rule">กฎ</span><div>ตอนรีเฟรชหน้า frontend ต้องยิง <code>GET /auth/me</code> ทุกครั้งเพื่อยืนยัน token ไม่ใช่เชื่อ user ที่ค้างอยู่ใน localStorage</div></li>
+        <li><span class="tag rule">กฎ</span><div>เจอ <code>401</code> ที่ไหนก็ตาม = ล้าง auth store แล้วเด้งกลับหน้า login · เจอ <code>403</code> = แสดง toast แต่อยู่หน้าเดิม</div></li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- ══════════════════════ SHEET 02 ══════════════════════ -->
+  <section class="sheet">
+    <div class="sheet-head">
+      <div class="sheet-no">02</div>
+      <div class="sheet-title">
+        <h2>ช่างหน้างาน — งานประจำวัน</h2>
+        <p>วงจรหนึ่งวันของ <code>STAFF</code> ตั้งแต่รับงานเช้าจนส่งรายงานเย็น</p>
+      </div>
+      <div class="sheet-meta">
+        <div class="roles"><span class="role eng">Site Engineer</span></div>
+        <small>7 endpoints</small>
+      </div>
+    </div>
+    <div class="diagram">
+<pre class="mermaid">
+%%{init:{"theme":"base","flowchart":{"rankSpacing":34,"nodeSpacing":26,"padding":8},"themeVariables":{"fontFamily":"Leelawadee UI, Segoe UI, sans-serif","fontSize":"14px","lineColor":"#7A8894","primaryColor":"#FCFDFD","primaryBorderColor":"#8B99A5","primaryTextColor":"#111820","edgeLabelBackground":"#FCFDFD"}}}%%
+flowchart TD
+  S(["เริ่มวันทำงานหน้างาน"]) --> A1["เปิดรายการงานของตัวเอง&lt;br/&gt;GET /tasks?assignedToId=me"]
+  A1 --> Q1{"มีงานที่ต้องทำวันนี้ไหม?"}
+  Q1 --&gt;|"ไม่มี"| R1
+  Q1 --&gt;|"มี"| A2["กดเริ่มงาน → IN_PROGRESS&lt;br/&gt;PATCH /tasks/:id/status"]
+  A2 --> G1{"เป็นงานที่มอบหมายให้เราไหม?"}
+  G1 --&gt;|"ไม่ใช่ · 403"| E1["Forbidden&lt;br/&gt;แก้ได้เฉพาะงานที่มอบหมายให้ตัวเอง"]
+  G1 --&gt;|"ใช่"| A3["อัปเดตความคืบหน้า 0-100 %&lt;br/&gt;PATCH /tasks/:id/progress"]
+  A3 --> A4["แนบรูปหน้างาน&lt;br/&gt;POST /documents · docType=PHOTO"]
+  A4 --> Q2{"งานเสร็จพร้อมให้ตรวจไหม?"}
+  Q2 --&gt;|"ยังไม่เสร็จ"| A3
+  Q2 --&gt;|"เสร็จแล้ว"| A5["ส่งงานให้ตรวจ → REVIEW&lt;br/&gt;PATCH /tasks/:id/status"]
+  A5 --> N1[["ระบบแจ้งเตือน PM ว่ามีงานรอตรวจ"]]
+  N1 --> R1["กรอกรายงานประจำวัน&lt;br/&gt;สภาพอากาศ · จำนวนคน · สรุปงาน&lt;br/&gt;POST /daily-reports"]
+  R1 --> Q3{"บันทึกรายงานสำเร็จไหม?"}
+  Q3 --&gt;|"ซ้ำวันเดิม · 409"| E2["Toast: วันนี้ส่งรายงานไปแล้ว"]
+  E2 --> R2["แก้ไขรายงานฉบับเดิมแทน&lt;br/&gt;PATCH /daily-reports/:id"]
+  R2 --> Q4
+  Q3 --&gt;|"สำเร็จ · 201"| Q4{"มีปัญหาหรือความล่าช้าหน้างานไหม?"}
+  Q4 --&gt;|"มี"| I1["แจ้งปัญหา&lt;br/&gt;POST /issues"]
+  I1 --> N2[["ระบบแจ้งเตือน PM อัตโนมัติ&lt;br/&gt;ISSUE_REPORTED"]]
+  N2 --> EN
+  Q4 --&gt;|"ไม่มี"| EN(["จบวันทำงาน"])
+
+  classDef st fill:#E8F0F8,stroke:#1F5C99,stroke-width:1.5px,color:#123A5E
+  classDef sys fill:#E8F0F8,stroke:#1F5C99,stroke-width:1.5px,color:#123A5E
+  classDef dec fill:#FBF0DB,stroke:#B8760A,stroke-width:1.5px,color:#5B3D00
+  classDef err fill:#FAEAE8,stroke:#B93A34,stroke-width:1.5px,color:#7A231E
+  class S,EN st
+  class N1,N2 sys
+  class Q1,Q2,Q3,Q4,G1 dec
+  class E1,E2 err
+</pre>
+    </div>
+    <div class="notes">
+      <h3>หมายเหตุประจำผัง</h3>
+      <ul>
+        <li><span class="tag block">บล็อก</span><div>ช่างยิง <code>GET /expenses</code> · <code>POST /expenses</code> · <code>GET /projects/:id/budget</code> · <code>GET /dashboard/budget-usage</code> ต้องได้ <code>403</code> ทุกตัว — บล็อกที่ backend ไม่ใช่แค่ซ่อนปุ่มใน UI</div></li>
+        <li><span class="tag block">บล็อก</span><div>เช็ค <code>assignedToUserId</code> ก่อนยอมให้เปลี่ยน status หรือ progress เสมอ ไม่งั้นช่างคนไหนก็แก้งานคนอื่นได้</div></li>
+        <li><span class="tag rule">กฎ</span><div><code>GET /dashboard/summary</code> ของช่างต้องตอบ <code>200</code> แต่ payload ต้อง<b>ไม่มี</b> field <code>budgetUsedPercent</code></div></li>
+        <li><span class="tag rule">กฎ</span><div>1 โครงการ + 1 วัน + 1 ผู้รายงาน = 1 รายงาน (<code>@@unique</code>) — ส่งซ้ำต้องได้ <code>409</code> แล้วให้ UI พาไปแก้ฉบับเดิมแทนที่จะให้กรอกใหม่</div></li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- ══════════════════════ SHEET 03 ══════════════════════ -->
+  <section class="sheet">
+    <div class="sheet-head">
+      <div class="sheet-no">03</div>
+      <div class="sheet-title">
+        <h2>ผู้จัดการโครงการ — เปิดโครงการถึงตรวจรับงาน</h2>
+        <p>เส้นทางหลักของ <code>PROJECT_MANAGER</code> — วางแผน มอบหมาย ตรวจรับ คุมงบ</p>
+      </div>
+      <div class="sheet-meta">
+        <div class="roles"><span class="role pm">Project Manager</span><span class="role admin">Admin</span></div>
+        <small>10 endpoints</small>
+      </div>
+    </div>
+    <div class="diagram">
+<pre class="mermaid">
+%%{init:{"theme":"base","flowchart":{"rankSpacing":34,"nodeSpacing":26,"padding":8},"themeVariables":{"fontFamily":"Leelawadee UI, Segoe UI, sans-serif","fontSize":"14px","lineColor":"#7A8894","primaryColor":"#FCFDFD","primaryBorderColor":"#8B99A5","primaryTextColor":"#111820","edgeLabelBackground":"#FCFDFD"}}}%%
+flowchart TD
+  S(["PM เข้าสู่ระบบแล้ว"]) --> P1["เลือกบริษัทลูกค้า&lt;br/&gt;GET /companies"]
+  P1 --> P2["สร้างโครงการ ชื่อ · ที่ตั้ง · งบ · วันเริ่ม-จบ&lt;br/&gt;POST /projects"]
+  P2 --> P3["เพิ่มทีมงานเข้าโครงการ&lt;br/&gt;POST /projects/:id/members"]
+  P3 --> P4["สร้างงานหลักและงานย่อย&lt;br/&gt;POST /tasks"]
+  P4 --> P5["มอบหมายผู้รับผิดชอบ + กำหนดส่ง&lt;br/&gt;PATCH /tasks/:id"]
+  P5 --> N1[["ระบบแจ้งเตือนช่าง&lt;br/&gt;TASK_ASSIGNED"]]
+  N1 --> P6["ติดตามงานบนกระดาน Kanban&lt;br/&gt;GET /projects/:id/tasks/board"]
+  P6 --> Q1{"มีงานเข้าสถานะ REVIEW ไหม?"}
+  Q1 --&gt;|"ยังไม่มี"| P6
+  Q1 --&gt;|"มี"| P7["เปิดดูรายละเอียดงาน + รูปหน้างานที่แนบ"]
+  P7 --> Q2{"งานผ่านเกณฑ์ไหม?"}
+  Q2 --&gt;|"ไม่ผ่าน"| P8["คอมเมนต์แจ้งสิ่งที่ต้องแก้&lt;br/&gt;POST /comments"]
+  P8 --> P9["ตีกลับเป็น IN_PROGRESS&lt;br/&gt;PATCH /tasks/:id/status"]
+  P9 --> P6
+  Q2 --&gt;|"ผ่าน"| P10["อนุมัติงาน → APPROVED&lt;br/&gt;PATCH /tasks/:id/status"]
+  P10 --> P11["บันทึกค่าใช้จ่ายของงาน&lt;br/&gt;POST /expenses"]
+  P11 --> P12["เทียบงบกับค่าใช้จ่ายจริง&lt;br/&gt;GET /projects/:id/budget"]
+  P12 --> Q3{"ใช้งบเกินแผนไหม?"}
+  Q3 --&gt;|"เกิน"| W1["แจ้ง ADMIN และปรับแผนงาน"]
+  Q3 --&gt;|"ไม่เกิน"| P13["ปิดงาน → COMPLETED"]
+  W1 --> P13
+  P13 --> EN(["โครงการเดินหน้าต่อ"])
+
+  classDef st fill:#E8F0F8,stroke:#1F5C99,stroke-width:1.5px,color:#123A5E
+  classDef sys fill:#E8F0F8,stroke:#1F5C99,stroke-width:1.5px,color:#123A5E
+  classDef dec fill:#FBF0DB,stroke:#B8760A,stroke-width:1.5px,color:#5B3D00
+  classDef err fill:#FAEAE8,stroke:#B93A34,stroke-width:1.5px,color:#7A231E
+  class S,EN st
+  class N1 sys
+  class Q1,Q2,Q3 dec
+  class W1 err
+</pre>
+    </div>
+    <div class="notes">
+      <h3>หมายเหตุประจำผัง</h3>
+      <ul>
+        <li><span class="tag block">บล็อก</span><div>PM <b>สร้าง</b>โครงการได้ แต่ <b>ลบไม่ได้</b> — <code>DELETE /projects/:id</code> เป็นของ ADMIN เท่านั้น PM ต้องได้ <code>403</code></div></li>
+        <li><span class="tag rule">กฎ</span><div><code>progressPercent</code> ของโครงการเป็นค่า<b>คำนวณสด</b>จากค่าเฉลี่ยของงาน ไม่เก็บเป็นคอลัมน์ใน DB</div></li>
+        <li><span class="tag rule">กฎ</span><div>ลาก card ใน Kanban ให้ยิง <code>PATCH /tasks/:id/status</code> แบบ optimistic update แล้ว rollback ถ้าไม่ได้ <code>200</code></div></li>
+        <li><span class="tag warn">ระวัง</span><div><code>amount</code> เป็น <code>Decimal(14,2)</code> — รับส่งเป็น string ห้ามแปลงเป็น Float ที่ฝั่ง frontend เพราะปัดเศษเงินหาย</div></li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- ══════════════════════ SHEET 04 ══════════════════════ -->
+  <section class="sheet">
+    <div class="sheet-head">
+      <div class="sheet-no">04</div>
+      <div class="sheet-title">
+        <h2>ลูกค้า — ติดตามงานและอนุมัติ</h2>
+        <p><code>CLIENT</code> ดูได้อย่างเดียว ยกเว้นคอมเมนต์และอนุมัติงาน</p>
+      </div>
+      <div class="sheet-meta">
+        <div class="roles"><span class="role client">Client</span></div>
+        <small>8 endpoints</small>
+      </div>
+    </div>
+    <div class="diagram">
+<pre class="mermaid">
+%%{init:{"theme":"base","flowchart":{"rankSpacing":34,"nodeSpacing":26,"padding":8},"themeVariables":{"fontFamily":"Leelawadee UI, Segoe UI, sans-serif","fontSize":"14px","lineColor":"#7A8894","primaryColor":"#FCFDFD","primaryBorderColor":"#8B99A5","primaryTextColor":"#111820","edgeLabelBackground":"#FCFDFD"}}}%%
+flowchart TD
+  S(["ลูกค้าเข้าสู่ระบบ"]) --> C1[["ระบบกรองให้เห็นเฉพาะโครงการของบริษัทตัวเอง&lt;br/&gt;GET /projects"]]
+  C1 --> C2["ดูความคืบหน้าโครงการ&lt;br/&gt;GET /projects/:id/summary"]
+  C2 --> Q1{"ต้องการดูเรื่องอะไร?"}
+
+  Q1 --&gt;|"ความคืบหน้างาน"| C3["ดูรายการงาน&lt;br/&gt;GET /tasks?projectId=1"]
+  Q1 --&gt;|"งบประมาณ"| C4["ดูงบกับค่าใช้จ่ายจริง&lt;br/&gt;GET /projects/:id/budget&lt;br/&gt;GET /expenses"]
+  Q1 --&gt;|"แบบและเอกสาร"| C5["เปิดเอกสาร&lt;br/&gt;GET /documents?docType=DRAWING"]
+
+  C3 --> Q2{"มีงานสถานะ REVIEW รออนุมัติไหม?"}
+  Q2 --&gt;|"ไม่มี"| C6["คอมเมนต์สอบถาม&lt;br/&gt;POST /comments"]
+  Q2 --&gt;|"มี"| C7["ตรวจงานจากรูปหน้างานและรายงาน"]
+  C7 --> Q3{"ยอมรับงานไหม?"}
+  Q3 --&gt;|"ยังไม่ยอมรับ"| C6
+  Q3 --&gt;|"ยอมรับ"| C8["อนุมัติงาน → APPROVED&lt;br/&gt;PATCH /tasks/:id/status"]
+  C6 --> N1[["ระบบแจ้งเตือน PM&lt;br/&gt;COMMENT_ADDED"]]
+
+  C4 --> EN
+  C5 --> EN
+  C8 --> EN
+  N1 --> EN(["จบการติดตาม"])
+
+  classDef st fill:#E8F0F8,stroke:#1F5C99,stroke-width:1.5px,color:#123A5E
+  classDef sys fill:#E8F0F8,stroke:#1F5C99,stroke-width:1.5px,color:#123A5E
+  classDef dec fill:#FBF0DB,stroke:#B8760A,stroke-width:1.5px,color:#5B3D00
+  class S,EN st
+  class C1,N1 sys
+  class Q1,Q2,Q3 dec
+</pre>
+    </div>
+    <div class="notes">
+      <h3>หมายเหตุประจำผัง</h3>
+      <ul>
+        <li><span class="tag block">บล็อก</span><div>ลูกค้ายิง <code>POST /daily-reports</code> · <code>POST /issues</code> · <code>POST /documents</code> · <code>POST /expenses</code> ต้องได้ <code>403</code> ทั้งหมด</div></li>
+        <li><span class="tag rule">กฎ</span><div>ลูกค้าเปลี่ยน status ได้เฉพาะเป็น <code>APPROVED</code> เท่านั้น — ส่งค่าอื่นมาต้องได้ <code>403</code> ไม่ใช่ปล่อยผ่านเพราะ role มีสิทธิ์แตะ endpoint นี้</div></li>
+        <li><span class="tag warn">ต้องตัดสินใจ</span><div>ลูกค้ายิงตรงไปที่ <code>/projects/:id</code> ของบริษัทอื่น จะตอบ <code>403</code> หรือ <code>404</code>? — <code>404</code> ปลอดภัยกว่าเพราะไม่บอกว่า id นั้นมีจริง · <code>403</code> debug ง่ายกว่า เลือกอย่างใดอย่างหนึ่งแล้วใช้ให้เหมือนกันทั้งระบบ</div></li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- ══════════════════════ SHEET 05 ══════════════════════ -->
+  <section class="sheet">
+    <div class="sheet-head">
+      <div class="sheet-no">05</div>
+      <div class="sheet-title">
+        <h2>แอดมิน — ตั้งค่าระบบครั้งแรก</h2>
+        <p>ลำดับบังคับตาม foreign key: บริษัทต้องมาก่อนผู้ใช้ ผู้ใช้ต้องมาก่อนโครงการ</p>
+      </div>
+      <div class="sheet-meta">
+        <div class="roles"><span class="role admin">Admin</span></div>
+        <small>5 endpoints</small>
+      </div>
+    </div>
+    <div class="diagram">
+<pre class="mermaid">
+%%{init:{"theme":"base","flowchart":{"rankSpacing":34,"nodeSpacing":26,"padding":8},"themeVariables":{"fontFamily":"Leelawadee UI, Segoe UI, sans-serif","fontSize":"14px","lineColor":"#7A8894","primaryColor":"#FCFDFD","primaryBorderColor":"#8B99A5","primaryTextColor":"#111820","edgeLabelBackground":"#FCFDFD"}}}%%
+flowchart TD
+  S(["ติดตั้งระบบและ migrate DB เสร็จ"]) --> A1["สร้างบัญชี ADMIN คนแรก&lt;br/&gt;POST /auth/register"]
+  A1 --> A2["เข้าสู่ระบบ เก็บ token&lt;br/&gt;POST /auth/login"]
+  A2 --> A3["สร้างบริษัทเจ้าของโครงการ&lt;br/&gt;POST /companies · type=OWNER"]
+  A3 --> A4["สร้างบริษัทผู้รับเหมา&lt;br/&gt;POST /companies · type=CONTRACTOR"]
+  A4 --> Q1{"ต้องเพิ่มผู้ใช้อีกไหม?"}
+  Q1 --&gt;|"ต้องเพิ่ม"| A5["กรอกข้อมูลพนักงาน + เลือก role + ผูก companyId&lt;br/&gt;POST /users"]
+  A5 --> Q2{"อีเมลซ้ำในระบบไหม?"}
+  Q2 --&gt;|"ซ้ำ · 409"| E1["Toast: อีเมลนี้ถูกใช้งานแล้ว"]
+  E1 --> A5
+  Q2 --&gt;|"ไม่ซ้ำ · 201"| Q1
+  Q1 --&gt;|"ครบทุกคนแล้ว"| A6["ตรวจรายชื่อทั้งหมด&lt;br/&gt;GET /users?sort=-createdAt"]
+  A6 --> A7["ส่งรหัสผ่านชั่วคราวให้พนักงานเปลี่ยนเอง"]
+  A7 --> EN(["ระบบพร้อมให้ PM เปิดโครงการ"])
+
+  classDef st fill:#E8F0F8,stroke:#1F5C99,stroke-width:1.5px,color:#123A5E
+  classDef dec fill:#FBF0DB,stroke:#B8760A,stroke-width:1.5px,color:#5B3D00
+  classDef err fill:#FAEAE8,stroke:#B93A34,stroke-width:1.5px,color:#7A231E
+  class S,EN st
+  class Q1,Q2 dec
+  class E1 err
+</pre>
+    </div>
+    <div class="notes">
+      <h3>หมายเหตุประจำผัง</h3>
+      <ul>
+        <li><span class="tag rule">ลำดับ</span><div>FK บังคับลำดับนี้ ข้ามไม่ได้ — <code>company</code> → <code>user</code> → <code>project</code> → <code>project_member</code> → <code>task</code> → <code>comment</code> / <code>document</code> / <code>daily_report</code> / <code>issue</code> / <code>expense</code></div></li>
+        <li><span class="tag warn">ระวัง</span><div>ถ้าปล่อย <code>/auth/register</code> ให้ส่ง <code>role: ADMIN</code> ได้ ขั้นตอนที่ 1 นี้จะกลายเป็นช่องให้ใครก็ได้สร้าง admin — ปิดหลัง seed admin คนแรกเสร็จ</div></li>
+        <li><span class="tag rule">กฎ</span><div>ลบบริษัทที่ยังมี user หรือ project ผูกอยู่ ควรตอบ <code>409</code> พร้อมบอกว่าติดอะไร ดีกว่าปล่อยให้ DB error หลุดออกไปหา client</div></li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- ══════════════════════ SHEET 06 ══════════════════════ -->
+  <section class="sheet">
+    <div class="sheet-head">
+      <div class="sheet-no">06</div>
+      <div class="sheet-title">
+        <h2>แอดมิน — จัดการผู้ใช้และกำกับดูแล</h2>
+        <p>งานประจำของ <code>ADMIN</code> — เพิ่ม เลื่อนตำแหน่ง ปิดบัญชี และตรวจโครงการทั้งระบบ</p>
+      </div>
+      <div class="sheet-meta">
+        <div class="roles"><span class="role admin">Admin</span></div>
+        <small>7 endpoints</small>
+      </div>
+    </div>
+    <div class="diagram">
+<pre class="mermaid">
+%%{init:{"theme":"base","flowchart":{"rankSpacing":34,"nodeSpacing":26,"padding":8},"themeVariables":{"fontFamily":"Leelawadee UI, Segoe UI, sans-serif","fontSize":"14px","lineColor":"#7A8894","primaryColor":"#FCFDFD","primaryBorderColor":"#8B99A5","primaryTextColor":"#111820","edgeLabelBackground":"#FCFDFD"}}}%%
+flowchart TD
+  S(["เปิด Admin Console"]) --> A0["โหลดรายชื่อผู้ใช้&lt;br/&gt;GET /users?page=1&amp;sort=-createdAt"]
+  A0 --> Q0{"ต้องการทำอะไร?"}
+
+  Q0 --&gt;|"เลื่อนตำแหน่ง"| B1["เปลี่ยน role&lt;br/&gt;PATCH /users/:id"]
+  B1 --> N1[["token เดิมยังถือ role เก่า&lt;br/&gt;ต้องบังคับให้ login ใหม่"]]
+  N1 --> EN
+
+  Q0 --&gt;|"ปิดบัญชี"| Q1{"ใช่บัญชีของตัวเองไหม?"}
+  Q1 --&gt;|"ใช่ · 400"| E1["ห้ามลบบัญชีตัวเอง"]
+  Q1 --&gt;|"ไม่ใช่"| Q2{"ผู้ใช้นี้ยังถูกมอบหมายงานอยู่ไหม?"}
+  Q2 --&gt;|"ยังมีงานค้าง"| B2["ย้ายงานให้คนอื่นก่อน&lt;br/&gt;PATCH /tasks/:id"]
+  B2 --> B3["ลบผู้ใช้&lt;br/&gt;DELETE /users/:id"]
+  Q2 --&gt;|"ไม่มีแล้ว"| B3
+  B3 --> EN
+
+  Q0 --&gt;|"ตรวจโครงการ"| C1["ดูทุกโครงการโดยไม่ต้องเป็นสมาชิก&lt;br/&gt;GET /projects"]
+  C1 --> C2["เปิด KPI รายโครงการ&lt;br/&gt;GET /projects/:id/summary"]
+  C2 --> Q3{"งบเกิน 90% หรือมีปัญหาค้างไหม?"}
+  Q3 --&gt;|"มี"| C3["ตามงานกับ PM&lt;br/&gt;GET /issues?status=OPEN"]
+  Q3 --&gt;|"ปกติ"| Q4{"โครงการนี้ปิดแล้วหรือยัง?"}
+  Q4 --&gt;|"ปิดแล้ว"| C4["ลบโครงการ — ADMIN เท่านั้น&lt;br/&gt;DELETE /projects/:id"]
+  Q4 --&gt;|"ยังใช้งาน"| EN
+  C3 --> EN
+  C4 --> EN(["จบรอบการดูแล"])
+
+  classDef st fill:#E8F0F8,stroke:#1F5C99,stroke-width:1.5px,color:#123A5E
+  classDef sys fill:#E8F0F8,stroke:#1F5C99,stroke-width:1.5px,color:#123A5E
+  classDef dec fill:#FBF0DB,stroke:#B8760A,stroke-width:1.5px,color:#5B3D00
+  classDef err fill:#FAEAE8,stroke:#B93A34,stroke-width:1.5px,color:#7A231E
+  class S,EN st
+  class N1 sys
+  class Q0,Q1,Q2,Q3,Q4 dec
+  class E1 err
+</pre>
+    </div>
+    <div class="notes">
+      <h3>หมายเหตุประจำผัง</h3>
+      <ul>
+        <li><span class="tag warn">ต้องตัดสินใจ</span><div>ลบผู้ใช้แล้ว งานที่เขาถืออยู่จะ cascade หรือ set null? ต้องตัดสินใจ<b>ก่อน</b>เขียน migration แรก ไม่ใช่ตอนเจอ error ตอน demo</div></li>
+        <li><span class="tag rule">กฎ</span><div>เปลี่ยน role แล้ว JWT เดิมยังฝัง role เก่าไว้ — เลือกทางใดทางหนึ่ง: บังคับ logout หรืออ่าน role จาก DB ทุก request แทนที่จะเชื่อ payload ใน token</div></li>
+        <li><span class="tag rule">กฎ</span><div>ADMIN ลบคอมเมนต์ของใครก็ได้ (<code>DELETE /comments/:id</code>) ส่วน role อื่นลบได้เฉพาะของตัวเอง</div></li>
+        <li><span class="tag rule">กฎ</span><div>ลบเอกสารต้องลบไฟล์บน Cloudinary ด้วย ไม่ใช่ลบแค่แถวใน DB แล้วปล่อยไฟล์ค้าง</div></li>
+      </ul>
+    </div>
+  </section>
+
+  <footer>
+    <span><b>อ้างอิง</b> APIs.md · PLAN.md · WORKFLOWS.md</span>
+    <span><b>ผู้จัดทำ</b> Purachaet</span>
+    <span><b>วันที่</b> 13 ส.ค. 2569</span>
+  </footer>
+
+</div>

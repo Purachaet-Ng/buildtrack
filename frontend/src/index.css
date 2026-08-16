@@ -1,0 +1,206 @@
+/* IBM Plex Sans Thai carries Latin + Thai in one family, so Thai UI text and
+   English labels share a coherent shape. Mono is for IDs, money, and any
+   column of numbers.
+
+   This @import must stay ABOVE the Tailwind imports: `@import "tailwindcss"`
+   expands into real rules, and a url() import that lands after them is invalid
+   CSS and silently drops the fonts. */
+@import url("https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans+Thai:wght@400;500;600;700&family=Noto+Sans+Thai:wght@400;500;600&display=swap");
+
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+/* ─────────────────────────────────────────────────────────────
+   BuildTrack design tokens — UI-PROMPT.md PROMPT 0
+   These are the source of truth. Do not invent shades.
+   ───────────────────────────────────────────────────────────── */
+@theme {
+  /* Primary (sage) — the app's accent */
+  --color-primary-50: #f2f8f7;
+  --color-primary-100: #e1efed;
+  --color-primary-200: #c7e1dc;
+  --color-primary-300: #a7cdc7;
+  --color-primary-400: #86b9b0; /* THE BRAND COLOR */
+  --color-primary-500: #67a89c;
+  --color-primary-600: #4f8c82;
+  --color-primary-700: #3e6f66;
+  --color-primary-800: #30544e;
+  --color-primary-900: #223a36;
+
+  /* Neutrals — slightly green-biased grey so they sit with the accent */
+  --color-app: #f7f9f8;
+  --color-surface: #ffffff;
+  --color-line: #e4e9e7;
+  --color-line-strong: #d2dad7;
+  --color-muted-fg: #6b7671;
+  --color-body: #2e3835;
+  --color-heading: #16201d;
+
+  /* Semantic — ONLY for status. Small dots, chips, and text. Never large fills. */
+  --color-info: #4a7fa8;
+  --color-success: #2e7d5b;
+  --color-warning: #c98a1e;
+  --color-danger: #c4534b;
+
+  --font-sans: "IBM Plex Sans Thai", "Noto Sans Thai", system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, monospace;
+
+  /* Overlay shadow — the only elevation in the app besides the 1px border */
+  --shadow-overlay: 0 4px 16px rgb(22 32 29 / 0.08);
+}
+
+/* ─────────────────────────────────────────────────────────────
+   shadcn/ui variables, mapped onto the tokens above.
+
+   CRITICAL: --primary-foreground is #16201D, never white. White text on
+   #86B9B0 is 2.19:1 and fails WCAG outright; the near-black label on sage
+   is 7.61:1 and is the app's signature. See UI-PROMPT.md "CRITICAL CONTRAST
+   RULE" before changing anything here.
+   ───────────────────────────────────────────────────────────── */
+:root {
+  --radius: 0.5rem; /* 8px — cards, inputs, buttons */
+
+  --background: #f7f9f8;
+  --foreground: #2e3835;
+
+  --card: #ffffff;
+  --card-foreground: #2e3835;
+  --popover: #ffffff;
+  --popover-foreground: #2e3835;
+
+  --primary: #86b9b0;
+  --primary-foreground: #16201d;
+
+  --secondary: #f2f8f7;
+  --secondary-foreground: #2e3835;
+
+  --muted: #f1f3f2;
+  --muted-foreground: #6b7671;
+
+  --accent: #f2f8f7;
+  --accent-foreground: #3e6f66;
+
+  --destructive: #c4534b;
+  --destructive-foreground: #ffffff;
+
+  --border: #e4e9e7;
+  --input: #d2dad7;
+  --ring: #4f8c82;
+
+  /* Charts: primary series first, then the semantic colors. Recharts reads these. */
+  --chart-1: #86b9b0;
+  --chart-2: #4a7fa8;
+  --chart-3: #c98a1e;
+  --chart-4: #2e7d5b;
+  --chart-5: #c4534b;
+
+  --sidebar: #ffffff;
+  --sidebar-foreground: #2e3835;
+  --sidebar-primary: #86b9b0;
+  --sidebar-primary-foreground: #16201d;
+  --sidebar-accent: #f2f8f7;
+  --sidebar-accent-foreground: #3e6f66;
+  --sidebar-border: #e4e9e7;
+  --sidebar-ring: #4f8c82;
+}
+
+/* Dark mode is Phase 2 (PLAN.md §4). Kept so shadcn components compile,
+   deliberately unused — no .dark class is ever set on <html> yet. */
+.dark {
+  --background: #16201d;
+  --foreground: #f7f9f8;
+  --card: #223a36;
+  --card-foreground: #f7f9f8;
+  --popover: #223a36;
+  --popover-foreground: #f7f9f8;
+  --primary: #86b9b0;
+  --primary-foreground: #16201d;
+  --secondary: #30544e;
+  --secondary-foreground: #f7f9f8;
+  --muted: #30544e;
+  --muted-foreground: #a7cdc7;
+  --accent: #30544e;
+  --accent-foreground: #f7f9f8;
+  --destructive: #c4534b;
+  --destructive-foreground: #ffffff;
+  --border: #30544e;
+  --input: #30544e;
+  --ring: #86b9b0;
+  --chart-1: #86b9b0;
+  --chart-2: #4a7fa8;
+  --chart-3: #c98a1e;
+  --chart-4: #2e7d5b;
+  --chart-5: #c4534b;
+  --sidebar: #223a36;
+  --sidebar-foreground: #f7f9f8;
+  --sidebar-primary: #86b9b0;
+  --sidebar-primary-foreground: #16201d;
+  --sidebar-accent: #30544e;
+  --sidebar-accent-foreground: #f7f9f8;
+  --sidebar-border: #30544e;
+  --sidebar-ring: #86b9b0;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+  /* PROMPT 0 wants ONE radius for surfaces: 8px on cards, inputs and buttons,
+     6px on chips and badges. shadcn spreads its components across
+     rounded-md (buttons, inputs), rounded-lg (dialog) and rounded-xl (card),
+     which with the default scale gives 6/8/12px — three radii, none of them
+     matching. Flattening md/lg/xl onto --radius fixes every component at once
+     instead of patching each file. sm stays 6px for chips and menu items. */
+  --radius-sm: calc(var(--radius) - 2px);
+  --radius-md: var(--radius);
+  --radius-lg: var(--radius);
+  --radius-xl: var(--radius);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+    font-size: 14px;
+    line-height: 1.6;
+  }
+
+  /* Money and any column of numbers must align. */
+  .tabular {
+    font-variant-numeric: tabular-nums;
+  }
+}

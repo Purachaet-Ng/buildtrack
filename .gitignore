@@ -1,6 +1,19 @@
-node_modules/
-generated/
-.env
-.env.local
-*.log
+# Machine-local Claude Code permissions — absolute paths, per-developer.
+# A shared .claude/settings.json is fine to commit; the .local one never is.
+.claude/settings.local.json
+
+# OS
 .DS_Store
+Thumbs.db
+
+# Editors
+.vscode/*
+!.vscode/extensions.json
+.idea/
+
+# Logs
+*.log
+
+# backend/ and frontend/ each carry their own .gitignore for node_modules,
+# build output and .env — a .gitignore applies to its own directory subtree,
+# so nothing needs repeating here.
