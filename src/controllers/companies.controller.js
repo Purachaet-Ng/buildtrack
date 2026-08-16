@@ -7,7 +7,7 @@ import {
   findCompanies,
   findCompanyById,
   updateCompany,
-} from "../services/companies.service";
+} from "../services/companies.service.js";
 
 const checkCompanyExistence = async (companyId) => {
   const company = await findCompanyById(companyId);
@@ -37,10 +37,9 @@ export async function addCompany(req, res) {
 // ─────────────────────────────────────────────────────────────
 export async function getCompany(req, res) {
   const { id } = req.valid.params;
-  company = await checkCompanyExistence(id);
-
+  const company = await checkCompanyExistence(id);
   res.status(200).json({
-    company,
+    data: company,
   });
 }
 // ─────────────────────────────────────────────────────────────
@@ -56,7 +55,7 @@ export async function editCompany(req, res) {
 
   res.status(200).json({
     message: "Company updated",
-    company,
+    data: company,
   });
 }
 // ─────────────────────────────────────────────────────────────

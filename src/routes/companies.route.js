@@ -11,6 +11,7 @@ import { validate } from "../middlewares/validate.js";
 import {
   companyParams,
   createCompanyBody,
+  updateCompanyBody,
 } from "../validators/companies.validator.js";
 
 const companyRoute = Router();
@@ -29,10 +30,15 @@ companyRoute.get("/:id", validate({ params: companyParams }), getCompany);
 companyRoute.patch(
   "/:id",
   requireRole("ADMIN"),
-  validate({ body: createCompanyBody, param: companyParams }),
+  validate({ body: updateCompanyBody, params: companyParams }),
   editCompany,
 );
 
-companyRoute.delete("/:id", validate({ params: companyParams }), removeCompany);
+companyRoute.delete(
+  "/:id",
+  requireRole("ADMIN"),
+  validate({ params: companyParams }),
+  removeCompany,
+);
 
 export default companyRoute;

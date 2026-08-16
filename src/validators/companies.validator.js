@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { CompanyType } from "@prisma/client";
+import { CompanyType } from "../../generated/prisma/client.js";
 /** `?status=` and `?clientCompanyId=` arrive as "" — treat as "not sent". */
 const emptyToUndefined = (schema) =>
   z.preprocess((value) => (value === "" ? undefined : value), schema);
@@ -9,7 +9,7 @@ const positiveId = (message) =>
 
 const phoneRegex = /^(?:\+66|0)[689]\d{2}[- ]?\d{3}[- ]?\d{3}$/;
 
-const roleSchema = z.enum(ROLE_VALUES);
+// const roleSchema = z.enum(CompanyType);
 
 export const companyParams = z.object({
   id: positiveId("Invalid project id"),
@@ -28,10 +28,6 @@ const companyBody = z.object({
     .regex(phoneRegex, "Invalid phone number format")
     .transform((val) => val.replace(/[- ]/g, ""))
     .nullish(),
-});
-
-export const companyParams = z.object({
-  id: positiveId("Invalid project id"),
 });
 
 export const createCompanyBody = companyBody;
