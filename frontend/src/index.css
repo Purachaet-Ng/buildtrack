@@ -17,130 +17,194 @@
    These are the source of truth. Do not invent shades.
    ───────────────────────────────────────────────────────────── */
 @theme {
-  /* Primary (sage) — the app's accent */
-  --color-primary-50: #f2f8f7;
-  --color-primary-100: #e1efed;
-  --color-primary-200: #c7e1dc;
-  --color-primary-300: #a7cdc7;
-  --color-primary-400: #86b9b0; /* THE BRAND COLOR */
-  --color-primary-500: #67a89c;
-  --color-primary-600: #4f8c82;
-  --color-primary-700: #3e6f66;
-  --color-primary-800: #30544e;
-  --color-primary-900: #223a36;
+  /* Primary (dark teal) — the app's CHROME, not its buttons. primary-900 is the
+     brand color and it is near-black (10% lightness), so it carries white text
+     at 15.85:1. It fills the sidebar and header; the content area stays light. */
+  --color-primary-50: #f5f9fa;
+  --color-primary-100: #e7f0f3;
+  --color-primary-200: #cfe2e7;
+  --color-primary-300: #abced9;
+  --color-primary-400: #7ab9cd;
+  --color-primary-500: #39a5c6;
+  --color-primary-600: #1f84a3;
+  --color-primary-700: #10657f;
+  --color-primary-800: #07465a;
+  --color-primary-900: #042630; /* THE BRAND COLOR */
 
-  /* Neutrals — slightly green-biased grey so they sit with the accent */
-  --color-app: #f7f9f8;
+  /* Secondary (orange) — the ACTION color: primary buttons, active nav bar.
+     Named `action`, not `accent`, because shadcn already owns --accent for its
+     hover surface (which is teal here); one name for two families would be a
+     trap. action-500 is a light fill and takes DARK text only (see the contrast
+     rule below). action-950 is the brand brown; it is the dark anchor of this
+     warm ramp and is the one role where it does not collide with primary-900,
+     which it matches in luminance exactly (1.00:1). */
+  --color-action-50: #fef7eb;
+  --color-action-100: #fcebcf;
+  --color-action-200: #f9dba9;
+  --color-action-300: #f7c36e;
+  --color-action-400: #faaa29;
+  --color-action-500: #e08a00; /* THE ACTION COLOR */
+  --color-action-600: #b87100;
+  --color-action-700: #905a04;
+  --color-action-800: #694407;
+  --color-action-900: #452d08;
+  --color-action-950: #361c0a; /* THE BRAND BROWN */
+
+  /* Neutrals — blue-biased grey (hue 191) so they sit with the teal chrome.
+     neutral-500 is the brand LightBlue. At 4.36:1 on white it misses small-text
+     AA by 0.14, so it is a border/icon/dot color; muted TEXT uses neutral-600. */
+  --color-app: #f9fbfb;
   --color-surface: #ffffff;
-  --color-line: #e4e9e7;
-  --color-line-strong: #d2dad7;
-  --color-muted-fg: #6b7671;
-  --color-body: #2e3835;
-  --color-heading: #16201d;
+  --color-line: #d2d9da;
+  --color-line-strong: #8a9799;
+  --color-neutral-400: #a0adb0;
+  --color-neutral-500: #6b7c80; /* THE BRAND NEUTRAL */
+  --color-muted-fg: #58666a;
+  --color-body: #2d3739;
+  --color-heading: #1a2223;
 
-  /* Semantic — ONLY for status. Small dots, chips, and text. Never large fills. */
-  --color-info: #4a7fa8;
-  --color-success: #2e7d5b;
-  --color-warning: #c98a1e;
-  --color-danger: #c4534b;
+  /* Semantic — ONLY for status. Small dots, chips, and text. Never large fills.
+     The brand palette contains no success or danger, so green and red are added
+     here, hue-matched to sit with teal and orange. `warning` is the orange ramp
+     at 700: #e08a00 itself is 2.69:1 on white and is never a text color. */
+  --color-info: #10657f;
+  --color-success: #1f7a4c;
+  --color-warning: #905a04;
+  --color-danger: #b3261e;
 
   --font-sans: "IBM Plex Sans Thai", "Noto Sans Thai", system-ui, sans-serif;
   --font-mono: "IBM Plex Mono", ui-monospace, monospace;
 
   /* Overlay shadow — the only elevation in the app besides the 1px border */
-  --shadow-overlay: 0 4px 16px rgb(22 32 29 / 0.08);
+  --shadow-overlay: 0 4px 16px rgb(4 38 48 / 0.1);
 }
 
 /* ─────────────────────────────────────────────────────────────
    shadcn/ui variables, mapped onto the tokens above.
 
-   CRITICAL: --primary-foreground is #16201D, never white. White text on
-   #86B9B0 is 2.19:1 and fails WCAG outright; the near-black label on sage
-   is 7.61:1 and is the app's signature. See UI-PROMPT.md "CRITICAL CONTRAST
-   RULE" before changing anything here.
+   CRITICAL: --primary is the ORANGE #E08A00 and --primary-foreground is
+   #042630, never white. White text on #E08A00 is 2.69:1 and fails WCAG
+   outright; the dark teal label on orange is 5.89:1 and is the app's
+   signature. The dark teal #042630 is chrome (see --sidebar below), not the
+   button fill. See UI-PROMPT.md "CRITICAL CONTRAST RULE" before changing
+   anything here.
    ───────────────────────────────────────────────────────────── */
 :root {
   --radius: 0.5rem; /* 8px — cards, inputs, buttons */
 
-  --background: #f7f9f8;
-  --foreground: #2e3835;
+  --background: #f9fbfb;
+  --foreground: #2d3739;
 
   --card: #ffffff;
-  --card-foreground: #2e3835;
+  --card-foreground: #2d3739;
   --popover: #ffffff;
-  --popover-foreground: #2e3835;
+  --popover-foreground: #2d3739;
 
-  --primary: #86b9b0;
-  --primary-foreground: #16201d;
+  --primary: #e08a00;
+  --primary-foreground: #042630;
+  /* Hover LIGHTENS. This is counterintuitive and deliberate: darkening #E08A00
+     passes through a dead zone around #B87100 where NEITHER the dark label
+     (4.08:1) nor a white one (3.89:1) reaches 4.5. Lightening keeps the dark
+     label legible the whole way, and --primary-active is the darkest step that
+     still holds it at 4.99:1. */
+  --primary-hover: #faaa29; /* 8.19:1 with --primary-foreground */
+  --primary-active: #ce7e00; /* 4.99:1 with --primary-foreground */
+  /* The orange fill is 2.69:1 against the white page — below the 3:1 that WCAG
+     1.4.11 requires for a control's boundary — so the button carries a 1px
+     border of its own. */
+  --primary-border: #905a04; /* 5.75:1 on white */
 
-  --secondary: #f2f8f7;
-  --secondary-foreground: #2e3835;
+  --secondary: #ffffff;
+  --secondary-foreground: #2d3739;
 
-  --muted: #f1f3f2;
-  --muted-foreground: #6b7671;
+  --muted: #f3f6f6;
+  --muted-foreground: #58666a;
 
-  --accent: #f2f8f7;
-  --accent-foreground: #3e6f66;
+  --accent: #e7f0f3;
+  --accent-foreground: #10657f;
 
-  --destructive: #c4534b;
+  --destructive: #b3261e;
   --destructive-foreground: #ffffff;
 
-  --border: #e4e9e7;
-  --input: #d2dad7;
-  --ring: #4f8c82;
+  /* --input is #8A9799, NOT the brand neutral #6B7C80. A white field on the
+     #F9FBFB page is 1.05:1, so the border is the field's only boundary and has
+     to carry 3:1 on its own — #8A9799 is exactly 3.01:1. */
+  --border: #d2d9da;
+  --input: #8a9799;
+  --ring: #905a04;
 
-  /* Charts: primary series first, then the semantic colors. Recharts reads these. */
-  --chart-1: #86b9b0;
-  --chart-2: #4a7fa8;
-  --chart-3: #c98a1e;
-  --chart-4: #2e7d5b;
-  --chart-5: #c4534b;
+  /* Charts are SEQUENTIAL, not categorical. Two hue families cannot produce
+     five distinguishable categorical series — every arrangement tested had a
+     pair under 1.3:1 — so this is a teal luminance ladder (consecutive
+     separation 1.53–1.97) with orange reserved as the single highlight.
+     Recharts reads these. */
+  --chart-1: #042630;
+  --chart-2: #07465a;
+  --chart-3: #10657f;
+  --chart-4: #1f84a3;
+  --chart-5: #7ab9cd;
+  --chart-highlight: #e08a00;
 
-  --sidebar: #ffffff;
-  --sidebar-foreground: #2e3835;
-  --sidebar-primary: #86b9b0;
-  --sidebar-primary-foreground: #16201d;
-  --sidebar-accent: #f2f8f7;
-  --sidebar-accent-foreground: #3e6f66;
-  --sidebar-border: #e4e9e7;
-  --sidebar-ring: #4f8c82;
+  /* The sidebar and header are dark teal chrome against the light content
+     area. --sidebar-accent (the active item's background) is only 1.53:1 on
+     the sidebar, so it cannot carry the active state by itself: the 2px
+     --sidebar-primary bar at 5.89:1 is the accessible indicator. */
+  --sidebar: #042630;
+  --sidebar-foreground: #e7f0f3;
+  --sidebar-primary: #e08a00;
+  --sidebar-primary-foreground: #042630;
+  --sidebar-accent: #07465a;
+  --sidebar-accent-foreground: #ffffff;
+  --sidebar-border: #07465a;
+  --sidebar-ring: #e08a00;
+  /* Inactive nav labels and the section divider label. #6B7C80 is only 3.64:1
+     on the sidebar and fails as text there — use this instead. */
+  --sidebar-muted-foreground: #a0adb0;
 }
 
 /* Dark mode is Phase 2 (PLAN.md §4). Kept so shadcn components compile,
    deliberately unused — no .dark class is ever set on <html> yet. */
 .dark {
-  --background: #16201d;
-  --foreground: #f7f9f8;
-  --card: #223a36;
-  --card-foreground: #f7f9f8;
-  --popover: #223a36;
-  --popover-foreground: #f7f9f8;
-  --primary: #86b9b0;
-  --primary-foreground: #16201d;
-  --secondary: #30544e;
-  --secondary-foreground: #f7f9f8;
-  --muted: #30544e;
-  --muted-foreground: #a7cdc7;
-  --accent: #30544e;
-  --accent-foreground: #f7f9f8;
-  --destructive: #c4534b;
-  --destructive-foreground: #ffffff;
-  --border: #30544e;
-  --input: #30544e;
-  --ring: #86b9b0;
-  --chart-1: #86b9b0;
-  --chart-2: #4a7fa8;
-  --chart-3: #c98a1e;
-  --chart-4: #2e7d5b;
-  --chart-5: #c4534b;
-  --sidebar: #223a36;
-  --sidebar-foreground: #f7f9f8;
-  --sidebar-primary: #86b9b0;
-  --sidebar-primary-foreground: #16201d;
-  --sidebar-accent: #30544e;
-  --sidebar-accent-foreground: #f7f9f8;
-  --sidebar-border: #30544e;
-  --sidebar-ring: #86b9b0;
+  --background: #1a2223;
+  --foreground: #f9fbfb;
+  --card: #2d3739;
+  --card-foreground: #f9fbfb;
+  --popover: #2d3739;
+  --popover-foreground: #f9fbfb;
+  --primary: #e08a00;
+  --primary-foreground: #042630;
+  --primary-hover: #faaa29;
+  --primary-active: #ce7e00;
+  --primary-border: #ce7e00; /* 5.10:1 on the dark page; #905A04 is only 2.81 */
+  --secondary: #434f51;
+  --secondary-foreground: #f9fbfb;
+  --muted: #434f51;
+  --muted-foreground: #c3ccce; /* 5.19:1 on --muted; #A0ADB0 is only 3.68 */
+  --accent: #07465a;
+  --accent-foreground: #f9fbfb;
+  --destructive: #ff6b6b;
+  --destructive-foreground: #042630;
+  --border: #434f51;
+  --input: #8a9799; /* 4.06:1 on --card; #6B7C80 is only 2.81 */
+  --ring: #e08a00;
+  /* The light ladder INVERTED, not just lightened: on a dark card the ordering
+     has to run light-to-dark or the series stop reading as a sequence. Light
+     values sit at 2.4–2.8:1 here and would be invisible. */
+  --chart-1: #cfe2e7;
+  --chart-2: #abced9;
+  --chart-3: #7ab9cd;
+  --chart-4: #39a5c6;
+  --chart-5: #1f84a3;
+  --chart-highlight: #faaa29;
+  --sidebar: #042630;
+  --sidebar-foreground: #e7f0f3;
+  --sidebar-primary: #e08a00;
+  --sidebar-primary-foreground: #042630;
+  --sidebar-accent: #07465a;
+  --sidebar-accent-foreground: #ffffff;
+  --sidebar-border: #07465a;
+  --sidebar-ring: #e08a00;
+  --sidebar-muted-foreground: #a0adb0;
 }
 
 @theme inline {
@@ -152,6 +216,9 @@
   --color-popover-foreground: var(--popover-foreground);
   --color-primary: var(--primary);
   --color-primary-foreground: var(--primary-foreground);
+  --color-primary-hover: var(--primary-hover);
+  --color-primary-active: var(--primary-active);
+  --color-primary-border: var(--primary-border);
   --color-secondary: var(--secondary);
   --color-secondary-foreground: var(--secondary-foreground);
   --color-muted: var(--muted);
@@ -168,8 +235,10 @@
   --color-chart-3: var(--chart-3);
   --color-chart-4: var(--chart-4);
   --color-chart-5: var(--chart-5);
+  --color-chart-highlight: var(--chart-highlight);
   --color-sidebar: var(--sidebar);
   --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-muted-foreground: var(--sidebar-muted-foreground);
   --color-sidebar-primary: var(--sidebar-primary);
   --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
   --color-sidebar-accent: var(--sidebar-accent);

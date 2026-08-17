@@ -11,5 +11,55 @@
  *   - unwrap the error envelope { status, message, errors } from
  *     backend/src/middlewares/errorHandler.js into a usable Error
  */
+import { useAuthStore } from "@/store/auth.store";
+import { create } from "axios";
 
-export const api = null;
+export const api = create({
+  baseURL: import.meta.env.VITE_API_URL ?? "http://localhost:8000/api/v1",
+});
+
+api.interceptors.request.use(
+  (config) => {
+    const token = useAuthStore.getState().token;
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
+  },
+);
+
+/**
+ * Flatten the backend envelope into a plain Error so callers can read
+ * `error.message` instead of digging through `error.response.data`. Validation
+ * details stay on `error.errors` for forms that map them to fields.
+ */
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    const status = error.response?.status;
+    const data = error.response?.data;
+
+    // A 401 from /auth/* is a failed login, not an expired session — clearing
+    // the store there would be a no-op at best. Everywhere else, clearing the
+    // token IS the redirect: routes/index.jsx swaps to the guest router.
+    const isAuthRequest = error.config?.url?.startsWith("/auth/");
+    if (status === 401 && !isAuthRequest) {
+      useAuthStore.getState().logout();
+    }
+
+    const apiError = new Error(
+      data?.message ??
+        (error.response
+          ? "Something went wrong. Please try again."
+          : "Cannot reach the server. Please try again."),
+    );
+    apiError.status = status;
+    apiError.errors = data?.errors ?? [];
+    return Promise.reject(apiError);
+  },
+);
+
+export default api;

@@ -8,4 +8,23 @@
  * Sprint 2.
  */
 
-export const useAuthStore = null;
+import { create } from "zustand";
+import { persist } from "zustand/middleware";
+
+export const useAuthStore = create(
+  persist(
+    (set) => ({
+      user: null,
+      token: null,
+      setUser: (user) => set({ user }),
+      setToken: (token) => set({ token }),
+      // Login returns both at once — set them together so no render ever sees
+      // a token without the user (and therefore without the role).
+      setAuth: ({ token, user }) => set({ token, user }),
+      logout: () => set({ user: null, token: null }),
+    }),
+    {
+      name: "user-store",
+    },
+  ),
+);
