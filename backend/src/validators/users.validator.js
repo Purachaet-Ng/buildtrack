@@ -16,7 +16,7 @@ const emptyToUndefined = (schema) =>
 const positiveId = (message) =>
   z.coerce.number({ error: message }).int(message).positive(message);
 
-const phoneRegex = /^(?:\+66|0)[689]\d{2}[- ]?\d{3}[- ]?\d{3}$/;
+const phoneRegex = /^(?:\+66|0)[689]\d[- ]?\d{3}[- ]?\d{4}$/;
 
 const role = z.enum(USER_ROLES, {
   error: `role must be one of ${USER_ROLES.join(", ")}`,
