@@ -25,15 +25,21 @@
  * Sprint 2.
  */
 
+import { Button } from "@/components/ui/button";
+import { useAuthStore } from "@/store/auth.store";
 import React from "react";
 import { Outlet } from "react-router-dom";
 
 function AppLayout() {
   // Shell still to build (sidebar + top bar, see above). The Outlet is here so
   // the authenticated routes actually mount in the meantime.
+  const logout = useAuthStore((state) => state.logout);
   return (
     <div>
       AppLayout
+      <Button className="" onClick={logout}>
+        logout
+      </Button>
       <Outlet />
     </div>
   );

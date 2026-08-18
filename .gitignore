@@ -2,6 +2,9 @@
 # A shared .claude/settings.json is fine to commit; the .local one never is.
 .claude/settings.local.json
 
+# Background-task worktrees: full checkouts of this repo living inside it.
+.claude/worktrees/
+
 # OS
 .DS_Store
 Thumbs.db

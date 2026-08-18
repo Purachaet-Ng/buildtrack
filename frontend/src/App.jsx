@@ -1,3 +1,4 @@
+import { Toaster } from "sonner";
 import { useAppRouter } from "./routes";
 import { RouterProvider } from "react-router-dom";
 
@@ -9,6 +10,10 @@ function App() {
       {/* App */}
 
       <RouterProvider router={router} />
+      {/* Position lives here, not per-toast: one default for every toast
+          in the app, and it survives the guest/user router swap because the
+          Toaster sits outside RouterProvider. */}
+      <Toaster position="top-center" richColors />
     </>
   );
 }
