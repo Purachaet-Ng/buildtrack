@@ -9,6 +9,11 @@
  * Sprint 2.
  */
 
+import { can } from "@/lib/permissions";
+import { useAuth } from "./useAuth";
+import { useCallback } from "react";
 export function usePermission() {
-  throw new Error("usePermission: not implemented (Sprint 2)");
+  const { role } = useAuth();
+  const canFn = useCallback((action) => can(role, action), [role]);
+  return { can: canFn, role };
 }

@@ -3,10 +3,17 @@
  * Sprint 7.
  */
 
+import { SkeletonTable } from "@/components/ui/skeleton";
+import { useUser } from "@/hooks/useUser";
 import React from "react";
 
 function DashboardPage() {
-  return <div>DashboardPage</div>;
+  const { data: user, isLoading, isError } = useUser();
+
+  if (isLoading) return <SkeletonTable className="h-20 w-full" />;
+  if (isError) return <div>Failed to load dashboard.</div>;
+
+  return <div>DashboardPage — {user?.data?.firstname}</div>;
 }
 
 export default DashboardPage;

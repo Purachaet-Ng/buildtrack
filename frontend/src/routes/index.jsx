@@ -31,12 +31,16 @@ import AppLayout from "@/layouts/AppLayout";
 import AuthLayout from "@/layouts/AuthLayout";
 import DashboardPage from "@/pages/DashboardPage";
 import LoginPage from "@/pages/LoginPage";
-import { NotFoundPage } from "@/pages/NotFoundPage";
-import { ProjectsPage } from "@/pages/ProjectsPage";
+import NotFoundPage from "@/pages/NotFoundPage";
+import { ProjectDetailPage } from "@/pages/ProjectDetailPage";
+import ProjectsPage from "@/pages/ProjectsPage";
 import RegisterPage from "@/pages/RegisterPage";
 import { UsersPage } from "@/pages/UsersPage";
 import { useAuthStore } from "@/store/auth.store";
 import { createBrowserRouter } from "react-router-dom";
+import ProtectedRoute from "./ProtectedRoute";
+import { CompaniesPage } from "@/pages/CompaniesPage";
+import ForbiddenPage from "@/pages/ForbiddenPage";
 
 const guestRouter = createBrowserRouter([
   {
@@ -47,6 +51,7 @@ const guestRouter = createBrowserRouter([
       { path: "register", Component: RegisterPage },
     ],
   },
+  { path: "*", Component: NotFoundPage },
 ]);
 
 const userRouter = createBrowserRouter([
@@ -56,23 +61,24 @@ const userRouter = createBrowserRouter([
     children: [
       { index: true, Component: DashboardPage },
       { path: "projects", Component: ProjectsPage },
-      { path: "users", Component: UsersPage },
+      { path: "projects/:id", Component: ProjectDetailPage },
+
+      // gate เดียว ครอบทุก route ข้างใน
+      {
+        element: <ProtectedRoute action="user:manage" />,
+        children: [
+          { path: "users", Component: UsersPage },
+          { path: "companies", Component: CompaniesPage },
+        ],
+      },
+
+      { path: "403", Component: ForbiddenPage },
       { path: "*", Component: NotFoundPage },
     ],
   },
 ]);
 
-/**
- * Which tree is live depends on the auth store, so it has to be read during
- * render — a module-level `const router = guestRouter` never re-evaluates, and
- * logging in would set the token with nothing on screen changing.
- *
- * This doubles as the 401 redirect: client.js clears the store on an expired
- * token, which swaps the guest router back in.
- */
 export function useAppRouter() {
   const token = useAuthStore((state) => state.token);
   return token ? userRouter : guestRouter;
 }
-
-export default guestRouter;

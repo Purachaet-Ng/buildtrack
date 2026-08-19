@@ -10,6 +10,7 @@
 
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
+import { queryClient } from "@/lib/queryCllient";
 
 export const useAuthStore = create(
   persist(
@@ -21,7 +22,10 @@ export const useAuthStore = create(
       // Login returns both at once — set them together so no render ever sees
       // a token without the user (and therefore without the role).
       setAuth: ({ token, user }) => set({ token, user }),
-      logout: () => set({ user: null, token: null }),
+      logout: () => {
+        queryClient.clear();
+        set({ user: null, token: null });
+      },
     }),
     {
       name: "user-store",
