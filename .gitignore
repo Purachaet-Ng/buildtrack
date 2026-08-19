@@ -20,3 +20,5 @@ Thumbs.db
 # backend/ and frontend/ each carry their own .gitignore for node_modules,
 # build output and .env — a .gitignore applies to its own directory subtree,
 # so nothing needs repeating here.
+data_table.tsx
+.claude/
