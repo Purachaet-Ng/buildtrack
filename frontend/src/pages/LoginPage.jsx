@@ -29,6 +29,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { loginSchema } from "@/validators/auth.validator";
 import { toast } from "sonner";
+import { Spinner } from "@/components/ui/spinner";
 
 function LoginPage({ className, ...props }) {
   const setAuth = useAuthStore((state) => state.setAuth);
@@ -136,7 +137,13 @@ function LoginPage({ className, ...props }) {
 
               <Field>
                 <Button type="submit" disabled={isSubmitting}>
-                  {isSubmitting ? "Logging in…" : "Login"}
+                  {isSubmitting ? (
+                    <>
+                      <Spinner className="size-4" /> <p>Logging in…</p>
+                    </>
+                  ) : (
+                    "Login"
+                  )}
                 </Button>
 
                 <FieldDescription className="text-center">

@@ -9,11 +9,7 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
-        // The orange fill needs a 1px border to have a discernible boundary on
-        // the white page (2.69:1 on its own), and its hover LIGHTENS rather
-        // than darkens — see the --primary-hover comment in index.css.
-        default:
-          "border border-primary-border bg-primary text-primary-foreground hover:bg-primary-hover active:bg-primary-active",
+        default: "bg-primary text-primary-foreground hover:bg-primary/90",
         destructive:
           "bg-destructive text-white hover:bg-destructive/90 focus-visible:ring-destructive/20 dark:bg-destructive/60 dark:focus-visible:ring-destructive/40",
         outline:

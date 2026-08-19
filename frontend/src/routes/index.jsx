@@ -29,7 +29,7 @@
 
 import AppLayout from "@/layouts/AppLayout";
 import AuthLayout from "@/layouts/AuthLayout";
-import { DashboardPage } from "@/pages/DashboardPage";
+import DashboardPage from "@/pages/DashboardPage";
 import LoginPage from "@/pages/LoginPage";
 import { NotFoundPage } from "@/pages/NotFoundPage";
 import { ProjectsPage } from "@/pages/ProjectsPage";
