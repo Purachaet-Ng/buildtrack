@@ -50,11 +50,7 @@ const authBody = z.object({
 
 export const registerBody = authBody;
 
-// Login must not re-apply the password policy: a wrong-but-short password
-// would 400 with "at least 8 characters" instead of 401, leaking the rule.
-export const loginBody = z.object({
-  email,
-  password: z
-    .string({ error: "password is required" })
-    .min(1, "password is required"),
+export const loginBody = authBody.pick({
+  email: true,
+  password: true,
 });

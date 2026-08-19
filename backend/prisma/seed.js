@@ -1,5 +1,5 @@
 import "dotenv/config";
-import bcrypt from "bcrypt";
+import argon2 from "argon2";
 import { prisma } from "../src/lib/prisma.js";
 
 // ─────────────────────────────────────────────────────────────
@@ -38,7 +38,10 @@ async function main() {
   console.log("🧹 Clearing existing data...");
   await reset();
 
-  const password = await bcrypt.hash(process.env.SEED_PASSWORD ?? "password123", 10);
+  // argon2, NOT bcrypt: auth.controller.js verifies with argon2.verify, which
+  // REJECTS a bcrypt hash rather than returning false. Seeding with bcrypt made
+  // every demo account fail login with "Invalid credentials".
+  const password = await argon2.hash(process.env.SEED_PASSWORD ?? "password123");
 
   // ── Companies ──────────────────────────────────────────────
   console.log("🏢 Seeding companies...");
