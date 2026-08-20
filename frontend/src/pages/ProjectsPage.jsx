@@ -10,6 +10,9 @@
  */
 
 import { StatusChip } from "@/components/common/StatusChip";
+import { AddProject } from "@/components/project/AddProject";
+import { DeleteProject } from "@/components/project/DeleteProject";
+import { EditProject } from "@/components/project/EditProject";
 import ProjectCard from "@/components/project/ProjectCard";
 import { Button } from "@/components/ui/button";
 import {
@@ -37,6 +40,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { useCompanies } from "@/hooks/useCompany";
 import { useDebounce } from "@/hooks/useDebounce";
 import { usePermission } from "@/hooks/usePermission";
 import { useProject } from "@/hooks/useProject";
@@ -59,7 +63,6 @@ import {
   Eye,
   LayoutGrid,
   Pencil,
-  Plus,
   Search,
   Table2,
   Trash2,
@@ -98,45 +101,70 @@ function RowActions({ project }) {
   const navigate = useNavigate();
   const { can } = usePermission();
 
+  // One slot, not a boolean per dialog: only ever one of them is open, and this
+  // makes that impossible to get wrong.
+  const [dialog, setDialog] = useState(null); // "edit" | "delete" | null
+  const closeDialog = (next) => {
+    if (!next) setDialog(null);
+  };
+
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button
-          variant="ghost"
-          size="icon-sm"
-          aria-label={`การดำเนินการสำหรับ ${project.name}`}
-        >
-          <EllipsisVertical />
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-40">
-        <DropdownMenuItem onSelect={() => navigate(`/projects/${project.id}`)}>
-          <Eye />
-          ดูรายละเอียด
-        </DropdownMenuItem>
-        {/* Hiding these is cosmetic — the backend returns 403 either way. */}
-        {can("project:update") && (
-          // TODO(Sprint 3): open the edit dialog once ProjectFormDialog exists.
-          <DropdownMenuItem disabled>
-            <Pencil />
-            แก้ไข
+    <>
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button
+            variant="ghost"
+            size="icon-sm"
+            aria-label={`การดำเนินการสำหรับ ${project.name}`}
+          >
+            <EllipsisVertical />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end" className="w-40">
+          <DropdownMenuItem
+            onSelect={() => navigate(`/projects/${project.id}`)}
+          >
+            <Eye />
+            ดูรายละเอียด
           </DropdownMenuItem>
-        )}
-        {can("project:delete") && (
-          <>
-            <DropdownMenuSeparator />
-            {/* TODO(Sprint 3): ConfirmDialog + DELETE /projects/:id. */}
-            <DropdownMenuItem variant="destructive" disabled>
-              <Trash2 />
-              ลบ
+          {/* Hiding these is cosmetic — the backend returns 403 either way. */}
+          {can("project:update") && (
+            <DropdownMenuItem onSelect={() => setDialog("edit")}>
+              <Pencil />
+              แก้ไข
             </DropdownMenuItem>
-          </>
-        )}
-      </DropdownMenuContent>
-    </DropdownMenu>
+          )}
+          {can("project:delete") && (
+            <>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                variant="destructive"
+                onSelect={() => setDialog("delete")}
+              >
+                <Trash2 />
+                ลบ
+              </DropdownMenuItem>
+            </>
+          )}
+        </DropdownMenuContent>
+      </DropdownMenu>
+
+      {/* Siblings of the menu, never inside DropdownMenuContent: that subtree
+          unmounts the moment the menu closes, taking the dialog with it before
+          it can ever paint. Mounted only while open so each one re-seeds from
+          the current row. */}
+      {dialog === "edit" && (
+        <EditProject project={project} open onOpenChange={closeDialog} />
+      )}
+      {dialog === "delete" && (
+        <DeleteProject project={project} open onOpenChange={closeDialog} />
+      )}
+    </>
   );
 }
-
+// ------------------------------------------------------------------------------
+// Coloumn
+// ------------------------------------------------------------------------------
 const nameColumn = columnHelper.accessor("name", {
   header: "Project Name",
   cell: ({ row }) => (
@@ -198,7 +226,7 @@ const progressColumn = columnHelper.accessor("progressPercent", {
 const budgetColumn = columnHelper.accessor("budget", {
   header: () => <span className="block w-full text-right">Budget</span>,
   cell: ({ row }) => (
-    <div className="tabular text-right font-mono">
+    <div className="tabular text-left font-mono">
       {formatMoney(row.original.budget)}
     </div>
   ),
@@ -218,12 +246,14 @@ const actionsColumn = columnHelper.display({
   header: () => <span className="sr-only">Action</span>,
   cell: ({ row }) => <RowActions project={row.original} />,
 });
+// ------------------------------------------------------------------------------
 
 /**
  * Two static arrays rather than one filtered per render, because the columns
  * array has to keep a stable identity. STAFF responses have no `budget` key at
  * all — the backend strips it — so the column is removed, not blanked.
  */
+// split budget for admin,pm only
 const COLUMNS = columnHelper.columns([
   nameColumn,
   clientColumn,
@@ -320,7 +350,7 @@ function ProjectsPage() {
     setPage(1);
   }, [debouncedSearch, status, companyId, sort]);
 
-  const params = useMemo(
+  const query = useMemo(
     () => ({
       page,
       limit: DEFAULT_PAGE_SIZE,
@@ -332,28 +362,28 @@ function ProjectsPage() {
     [page, sort, debouncedSearch, status, companyId],
   );
 
-  const { data, isLoading, isError } = useProject(params);
+  const { data, isLoading, isError } = useProject(query);
 
   const projects = data?.data ?? EMPTY_PROJECTS;
   const pagination = data?.pagination;
 
   /**
-   * The client filter's options are built from the rows seen so far,
-   * accumulated across pages.
+   * The client filter's options, with two sources.
    *
-   * This is a stopgap: GET /companies is specified in APIs.md but not routed —
-   * backend/src/routes/companies.route.js has the line commented out and
-   * listCompanies is an empty function — so there is no endpoint to ask for the
-   * full list. Filtering itself is correct (the id goes to the server and the
-   * server filters); only the option list is partial. Accumulating rather than
-   * recomputing per page is what keeps the current selection from vanishing
-   * out from under the user when they page.
+   * ADMIN and PM read the real list from GET /companies, so they can filter by a
+   * company whose projects are not on the current page. That endpoint is 403 for
+   * STAFF and CLIENT, who fall back to the companies seen on the rows loaded so
+   * far — a partial list, but they only ever see their own handful of projects
+   * anyway. Accumulating rather than recomputing per page is what keeps the
+   * current selection from vanishing out from under them when they page.
    */
-  const [companyOptions, setCompanyOptions] = useState([]);
+  const { data: companies } = useCompanies({ enabled: can("company:view") });
+
+  const [seenCompanies, setSeenCompanies] = useState([]);
   useEffect(() => {
     if (projects.length === 0) return;
 
-    setCompanyOptions((previous) => {
+    setSeenCompanies((previous) => {
       const byId = new Map(previous.map((company) => [company.id, company]));
       let added = false;
 
@@ -371,6 +401,8 @@ function ProjectsPage() {
       );
     });
   }, [projects]);
+
+  const companyOptions = companies?.data ?? seenCompanies;
 
   // can("money:view") is ADMIN / PM / CLIENT — the exact complement of STAFF, so
   // "STAFF never sees money" is expressed through the permission matrix rather
@@ -398,14 +430,9 @@ function ProjectsPage() {
   const firstOnPage = total === 0 ? 0 : (currentPage - 1) * limit + 1;
   const lastOnPage = Math.min(currentPage * limit, total);
 
-  const createButton = can("project:create") ? (
-    // TODO(Sprint 3): open ProjectFormDialog — POST /projects is already wired
-    // in @/api/projects.api, only the form is missing.
-    <Button disabled>
-      <Plus />
-      Create Project
-    </Button>
-  ) : null;
+  // AddProject carries its own trigger button and its own permission-free
+  // rendering, so the gate lives here: ADMIN and PM only.
+  const createButton = can("project:create") ? <AddProject /> : null;
 
   if (isLoading) return <SkeletonTable />;
   if (isError)
@@ -448,13 +475,14 @@ function ProjectsPage() {
 
   return (
     <div className="flex flex-col gap-6">
+      {/* TITLE */}
       <div className="flex flex-wrap items-center justify-between gap-4">
         <h1 className="text-2xl font-semibold tracking-[-0.01em] text-heading">
           Project
         </h1>
         {createButton}
       </div>
-
+      {/* Search Bar */}
       <div className="flex flex-wrap items-center gap-3 rounded-lg border bg-card p-4">
         <div className="relative min-w-56 flex-1">
           <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-neutral-500" />
@@ -469,7 +497,7 @@ function ProjectsPage() {
             className="pl-9"
           />
         </div>
-
+        {/* Status Filter */}
         <Select value={status} onValueChange={setStatus}>
           <SelectTrigger className="w-48" aria-label="Filter by status">
             <SelectValue />
@@ -483,7 +511,7 @@ function ProjectsPage() {
             ))}
           </SelectContent>
         </Select>
-
+        {/* Client Filter */}
         <Select value={companyId} onValueChange={setCompanyId}>
           <SelectTrigger className="w-56" aria-label="Filter by client company">
             <SelectValue />
@@ -497,7 +525,7 @@ function ProjectsPage() {
             ))}
           </SelectContent>
         </Select>
-
+        {/* Content Display Toggle */}
         <div
           role="group"
           aria-label="Display format"
@@ -525,8 +553,7 @@ function ProjectsPage() {
         </div>
       </div>
 
-      {/* Table: the chosen view at md and up. Below md the card grid takes over
-          regardless of the toggle, which is why the toggle itself is md:flex. */}
+      {/* Table */}
       <div
         className={cn(
           "overflow-hidden rounded-lg border bg-card",
@@ -605,7 +632,7 @@ function ProjectsPage() {
         )}
       </div>
 
-      {/* Cards: the chosen view at md and up, and the only view below it. */}
+      {/* Cards*/}
       <div
         className={cn(
           "flex flex-col gap-4",

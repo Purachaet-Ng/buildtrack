@@ -114,10 +114,16 @@ export const COMPANY_TYPE = {
   SUBCONTRACTOR: "SUBCONTRACTOR",
 };
 
+/**
+ * Company type is identity, not status — so, like ROLE_META, neutral tones with
+ * one accent for the party that owns the job. The three pairs are lifted
+ * verbatim from ROLE_META rather than newly mixed, so the ratios below are the
+ * ones already checked there.
+ */
 export const COMPANY_TYPE_META = {
-  OWNER: { label: "เจ้าของโครงการ" },
-  CONTRACTOR: { label: "ผู้รับเหมา" },
-  SUBCONTRACTOR: { label: "ผู้รับเหมาช่วง" },
+  OWNER: { label: "เจ้าของโครงการ", fg: "#10657F", bg: "#CFE2E7" }, // 4.92:1
+  CONTRACTOR: { label: "ผู้รับเหมา", fg: "#58666A", bg: "#E8ECED" }, // 5.01:1
+  SUBCONTRACTOR: { label: "ผู้รับเหมาช่วง", fg: "#58666A", bg: "#F3F6F6" }, // 5.48:1
 };
 
 // ─── Document ────────────────────────────────────────────────────────────────

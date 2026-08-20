@@ -30,29 +30,17 @@ import { useAuthStore } from "@/store/auth.store";
 import React from "react";
 import { NavLink, Outlet } from "react-router-dom";
 import { AppSidebar } from "@/components/app-sidebar";
-import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbList,
-  BreadcrumbPage,
-  BreadcrumbSeparator,
-} from "@/components/ui/breadcrumb";
+import { AppBreadcrumb } from "@/components/app-breadcrumb";
 import { Separator } from "@/components/ui/separator";
 import {
   SidebarInset,
   SidebarProvider,
   SidebarTrigger,
 } from "@/components/ui/sidebar";
+
 function AppLayout() {
   // Shell still to build (sidebar + top bar, see above). The Outlet is here so
   // the authenticated routes actually mount in the meantime.
-  const logout = useAuthStore((state) => state.logout);
-  const menu = [
-    { name: "Dashboard", link: "/" },
-    { name: "Projects", link: "/project" },
-    { name: "Task", link: "/task" },
-  ];
 
   return (
     <SidebarProvider>
@@ -65,19 +53,7 @@ function AppLayout() {
               orientation="vertical"
               className="mr-2 data-[orientation=vertical]:h-4"
             />
-            <Breadcrumb>
-              <BreadcrumbList>
-                <BreadcrumbItem className="hidden md:block">
-                  <BreadcrumbLink href="#">
-                    Build Your Application
-                  </BreadcrumbLink>
-                </BreadcrumbItem>
-                <BreadcrumbSeparator className="hidden md:block" />
-                <BreadcrumbItem>
-                  <BreadcrumbPage>Data Fetching</BreadcrumbPage>
-                </BreadcrumbItem>
-              </BreadcrumbList>
-            </Breadcrumb>
+            <AppBreadcrumb />
           </div>
         </header>
         <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
