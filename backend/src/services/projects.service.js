@@ -128,7 +128,8 @@ export const createProject = async (projectData, creator) => {
     data: {
       ...projectData,
       ...(isNotAdmin && {
-        projectMembers: {
+        // `members` is the relation on Project — `projectMembers` is the one on User
+        members: {
           create: {
             userId: creator.id,
             roleInProject: "Project Manager",

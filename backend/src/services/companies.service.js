@@ -3,9 +3,26 @@ import { prisma } from "../lib/prisma.js";
 // ─────────────────────────────────────────────────────────────
 // Reads
 // ─────────────────────────────────────────────────────────────
-//Find All Companies
+/**
+ * Find All Companies
+ *
+ * `_count` is the same idiom the projects list uses: two COUNT sub-queries in
+ * the one round trip, so the บริษัท cards can show how many projects and staff
+ * a company carries without an N+1 per card. These are also exactly the two
+ * relations that block DELETE /companies/:id (both are onDelete: Restrict), so
+ * a non-zero count is the screen's advance warning that a delete will fail.
+ *
+ * `orderBy` is here because the rows feed two alphabetical surfaces — the card
+ * grid and the client `<select>` on the project form — and an unordered
+ * findMany leaves both in whatever order Postgres returns.
+ */
 export const findAllCompanies = async () => {
-  const companies = await prisma.company.findMany();
+  const companies = await prisma.company.findMany({
+    orderBy: { name: "asc" },
+    include: {
+      _count: { select: { clientProjects: true, users: true } },
+    },
+  });
   return companies;
 };
 //Find Companies

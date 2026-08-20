@@ -5,6 +5,7 @@ import {
   addCompany,
   editCompany,
   getCompany,
+  listCompanies,
   removeCompany,
 } from "../controllers/companies.controller.js";
 import { validate } from "../middlewares/validate.js";
@@ -18,7 +19,7 @@ const companyRoute = Router();
 //{{base_url}}/companies
 
 companyRoute.use(requireAuth);
-// companyRoute.get("/")
+
 companyRoute.post(
   "/",
   requireRole("ADMIN"),
@@ -26,6 +27,8 @@ companyRoute.post(
   addCompany,
 );
 companyRoute.get("/:id", validate({ params: companyParams }), getCompany);
+
+companyRoute.get("/", requireRole("ADMIN", "PROJECT_MANAGER"), listCompanies);
 
 companyRoute.patch(
   "/:id",

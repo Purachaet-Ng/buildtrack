@@ -90,6 +90,11 @@ Authorization: Bearer <token>
 | DELETE | `/companies/:id` | ลบบริษัท | ADMIN |
 
 > `type` = `OWNER` \| `CONTRACTOR` \| `SUBCONTRACTOR`
+>
+> `GET /companies` returns the whole list, unpaginated and sorted by `name`, as
+> `{ data: [...] }`. Each row carries
+> `_count: { clientProjects, users }` — the two relations that also block
+> `DELETE /companies/:id`.
 
 ---
 
@@ -134,6 +139,73 @@ Authorization: Bearer <token>
 | POST | `/projects/:id/members` | เพิ่มทีมงานเข้าโครงการ | ADMIN, PM |
 | PATCH | `/projects/:id/members/:userId` | แก้ไขตำแหน่งในโครงการ | ADMIN, PM |
 | DELETE | `/projects/:id/members/:userId` | นำทีมงานออกจากโครงการ | ADMIN, PM |
+
+> **สังเกต:** sub-resource ใช้ `:userId` (id ของ user) ไม่ใช่ id ของแถว `project_member`
+
+**Response ของ list** — คืนทีมงานทั้งหมด ไม่แบ่งหน้า (ทีมของโครงการมีไม่กี่คน) เรียงตาม `joinedAt`:
+
+```json
+{
+  "data": [
+    {
+      "id": 1,
+      "projectId": 1,
+      "userId": 3,
+      "roleInProject": "Site Engineer",
+      "joinedAt": "2026-01-15T00:00:00.000Z",
+      "user": {
+        "id": 3,
+        "firstname": "Somchai",
+        "lastname": "Jaidee",
+        "email": "engineer@buildtrack.com",
+        "role": "STAFF",
+        "phone": "0812345678",
+        "companyId": 1,
+        "company": { "id": 1, "name": "BuildTrack Co., Ltd.", "type": "CONTRACTOR" }
+      }
+    }
+  ]
+}
+```
+
+**POST `/projects/:id/members`** — request / response:
+
+```json
+{ "userId": 4, "roleInProject": "Foreman" }
+```
+
+```json
+{ "message": "Member added", "member": { /* เหมือนรูปแบบด้านบน */ } }
+```
+
+**PATCH `/projects/:id/members/:userId`** — แก้ได้เฉพาะ `roleInProject`:
+
+```json
+{ "roleInProject": "Site Engineer" }
+```
+
+```json
+{ "message": "Member updated", "member": { /* ... */ } }
+```
+
+**DELETE `/projects/:id/members/:userId`:**
+
+```json
+{ "message": "Member removed" }
+```
+
+> - `roleInProject` เป็น **free text** (ตำแหน่งในโครงการ) ไม่ใช่ `role` ของระบบ — เช่น `"Project Manager"` `"Structural Engineer"` `"Site Engineer"` `"Client Representative"`
+> - ADMIN จัดการได้ทุกโครงการ · PM จัดการได้เฉพาะโครงการที่ตัวเองเป็นสมาชิก (ไม่งั้น `403`)
+> - GET เปิดให้ทุกคนที่เข้าถึงโครงการได้ (member / CLIENT เจ้าของโครงการ / ADMIN)
+
+**Status codes:**
+
+| Code | เมื่อไหร่ |
+| ---- | -------- |
+| `400` | `userId` ไม่ใช่จำนวนเต็มบวก · `roleInProject` ว่างหรือยาวเกิน 100 ตัวอักษร |
+| `403` | STAFF / CLIENT เรียก write endpoint · ผู้เรียกไม่ได้อยู่ในโครงการนี้ |
+| `404` | `Project not found` · `User not found` · `Member not found` |
+| `409` | `User is already a member of this project` (`@@unique([projectId, userId])`) |
 
 ---
 

@@ -19,7 +19,19 @@ const checkCompanyExistence = async (companyId) => {
 // GET /companies
 // ─────────────────────────────────────────────────────────────
 
-export async function listCompanies(req, res) {}
+/**
+ * The whole list, unpaginated and unfiltered: APIs.md documents no query params
+ * here, and this exists to fill a `<select>` — three rows today, and a company
+ * table that grows by a handful a year. `{ data }` with no `pagination` key
+ * matches the sibling GET /companies/:id rather than the paged GET /users.
+ */
+export async function listCompanies(req, res) {
+  const companies = await findAllCompanies();
+
+  res.status(200).json({
+    data: companies,
+  });
+}
 // ─────────────────────────────────────────────────────────────
 // POST /companies
 // ─────────────────────────────────────────────────────────────
