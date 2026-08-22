@@ -215,16 +215,21 @@ Authorization: Bearer <token>
 
 ## ✅ Tasks
 
-| Method | Endpoint | Description | Role |
-| ------ | -------- | ----------- | ---- |
-| GET | `/tasks` | ดูงานทั้งหมด (filter ได้) | Member |
-| POST | `/tasks` | สร้างงาน / งานย่อย | ADMIN, PM |
-| GET | `/tasks/:id` | ดูรายละเอียดงาน | Member |
-| PATCH | `/tasks/:id` | แก้ไขข้อมูลงาน | ADMIN, PM |
-| DELETE | `/tasks/:id` | ลบงาน | ADMIN, PM |
-| PATCH | `/tasks/:id/status` | เปลี่ยนสถานะ (ใช้ตอนลาก Kanban) | PM, ENG (ผู้รับผิดชอบ) |
-| PATCH | `/tasks/:id/progress` | อัปเดต % ความคืบหน้า | PM, ENG (ผู้รับผิดชอบ) |
-| GET | `/projects/:id/tasks/board` | ดึงงานจัดกลุ่มตามสถานะ (Kanban) | Member |
+| Method | Endpoint | Description | Role | Status |
+| ------ | -------- | ----------- | ---- | ------ |
+| GET | `/tasks` | ดูงานทั้งหมด (filter ได้) | Member | ✅ |
+| POST | `/tasks` | สร้างงาน / งานย่อย | ADMIN, PM | ✅ |
+| GET | `/tasks/:id` | ดูรายละเอียดงาน | Member | ✅ |
+| PATCH | `/tasks/:id` | แก้ไขข้อมูลงาน | ADMIN, PM | ✅ |
+| DELETE | `/tasks/:id` | ลบงาน | ADMIN, PM | ✅ |
+| PATCH | `/tasks/:id/status` | เปลี่ยนสถานะ | ADMIN, PM, ENG (งานตัวเอง), CLIENT (เฉพาะ `APPROVED`) | ✅ |
+| PATCH | `/tasks/:id/progress` | อัปเดต % ความคืบหน้า | PM, ENG (ผู้รับผิดชอบ) | ✅ |
+| GET | `/projects/:id/tasks/board` | ดึงงานจัดกลุ่มตามสถานะ (Kanban) | Member | ⚠️ Phase 2 |
+
+> **หมายเหตุ**
+> - 7 endpoint แรก implement แล้ว (Sprint 4) — ดู `backend/requests/tasks.http`
+> - `/tasks/board` เลื่อนไป Phase 2 พร้อม Kanban board (PLAN.md §4) — ยังไม่ได้เขียน เพราะมีไว้ใช้กับ board อย่างเดียว
+> - `PATCH /tasks/:id/status` ตรวจสิทธิ์ตาม **ค่าที่ส่ง** ไม่ใช่ตาม role อย่างเดียว: STAFF เฉพาะงานตัวเองและห้าม `APPROVED` · CLIENT ตั้งได้เฉพาะ `APPROVED`
 
 **Filters:** `?projectId=1&status=IN_PROGRESS&priority=HIGH&assignedToId=3&parentTaskId=null&dueBefore=2026-09-01`
 

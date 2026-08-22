@@ -141,18 +141,25 @@ And on `task`: `progressPercent Int @default(0)` — with a check that it's 0–
 1. Auth: register, login, logout, `/me`, JWT + bcrypt, role-based middleware
 2. Companies + Users CRUD (admin only)
 3. Projects CRUD + member assignment
-4. Tasks CRUD, sub-tasks, status, priority, assignee, progress %
-5. Kanban board with drag-and-drop
-6. Dashboard: KPI cards + 2 charts + recent activity
-7. Comments on tasks
-8. Document upload (Cloudinary)
-9. Daily Site Report — create + list + view
-10. Issue tracking
-11. Expenses + budget-vs-actual view
-12. RBAC enforced on **both** frontend routes and backend endpoints
+4. Tasks CRUD, sub-tasks, status, priority, assignee, progress % — as a **list** view
+5. Dashboard: KPI cards + 2 charts + recent activity
+6. Comments on tasks
+7. Document upload (Cloudinary)
+8. Daily Site Report — create + list + view
+9. Issue tracking
+10. Expenses + budget-vs-actual view
+11. RBAC enforced on **both** frontend routes and backend endpoints
 
 ### Phase 2 — build only if MVP ships early
-Gantt/timeline view · Socket.IO real-time · PDF/Excel export · email notifications · materials & inventory · dark mode · activity audit log · project map
+**Kanban board with drag-and-drop** · Gantt/timeline view · Socket.IO real-time · PDF/Excel export · email notifications · materials & inventory · dark mode · activity audit log · project map
+
+> **Kanban was moved out of the MVP on 2026-08-22**, after the task list shipped.
+> It adds no capability the list does not already have — the same
+> `PATCH /tasks/:id/status` endpoint drives both — and it is the single largest
+> block of unestimatable work left in the plan (~12–17h against a ~20h list
+> view, with most of the spread in dnd-kit edge cases). §8 named it the stall
+> risk from the start; this is that mitigation being taken rather than merely
+> written down. Build it when everything else ships, not before.
 
 ### Explicitly out of scope (say so in the README)
 Timesheets (struck from SRS) · multi-tenant billing · mobile app · offline mode
@@ -169,7 +176,7 @@ Each sprint ends with something **runnable and committed**. Do not move on with 
 | **1 — Schema & seed** | Full `schema.prisma` with all fixes from §2.1 and models from §3. First migration. Seed script: 1 company, 4 users (one per role), 2 projects, ~20 tasks. | `npx prisma studio` shows realistic data |
 | **2 — Auth & RBAC** | register/login/logout/me, bcrypt, JWT, `authenticate` + `authorize(...roles)` middleware, Zod validation, error handler. Frontend: login page, protected routes, Zustand auth store. | Log in as each of the 4 roles; a STAFF gets 403 on `POST /projects` |
 | **3 — Projects** | Projects CRUD + `project_member` assign/remove. List page (TanStack Table), detail page with tabs shell. | PM creates a project, adds an engineer, engineer sees it in their list |
-| **4 — Tasks & Kanban** | Tasks CRUD, sub-tasks, assignee, progress %. Task list view first, then Kanban with dnd-kit; drag → `PATCH /tasks/:id` optimistic update. Board is gated to `lg:` and up (§6.1). | Drag a card between columns, refresh, it stayed. Below 1024px the board toggle is hidden and the list view is shown instead |
+| **4 — Tasks** | ✅ Tasks CRUD, sub-tasks, assignee, progress %, as a list view on the project's งาน tab and on งานของฉัน. Per-transition RBAC on `PATCH /tasks/:id/status` (§4). **Kanban moved to Phase 2** — it is an enhancement on top of this, not part of it. | ✅ A PM plans a WBS, an engineer moves their own task's % and the project's derived progress follows in every place it is shown |
 | **5 — Site workflow** | Daily Site Report (form + list + detail), Issues (CRUD + status), Comments on tasks, Notifications on assign/issue. **Mobile layout for these screens is built here, not deferred** — report form, issue form and task-progress screen are designed at 375px first (§6.1). | Engineer submits a report and raises an issue *from a phone-width viewport*; PM sees a notification |
 | **6 — Money & docs** | Expense CRUD, budget-vs-actual per project, Cloudinary document upload + list/download. | Budget bar shows spent/remaining; PDF uploads and opens |
 | **7 — Dashboard & polish** | Dashboard KPIs + Recharts (tasks by status, budget usage, progress over time), global search/filter, empty states, loading skeletons, 404 page. Narrow-viewport fallbacks for the **desktop-first** screens only — engineer screens were already done in Sprint 5. | Dashboard loads in <2s with seeded data; no horizontal scroll on any route at 375px |
@@ -255,7 +262,7 @@ Ranked by (recruiter impact ÷ effort):
 | Risk | Mitigation |
 |---|---|
 | Scope creep — the SRS is huge | §4 is the contract. New ideas go in a `BACKLOG.md`, not into the sprint. |
-| Sprint 4 (Kanban DnD) stalls the project | Build the task **list** view first and ship it. Kanban is an enhancement on top of working CRUD, not a prerequisite. |
+| ~~Sprint 4 (Kanban DnD) stalls the project~~ ✅ handled | Taken as written: the task **list** view shipped first, and Kanban was then moved to Phase 2 (§4) rather than started. The list satisfies A-2, A-3 and E-2 on its own. |
 | File upload burns a week | Cloudinary unsigned preset first, harden later. Don't start with S3. |
 | Money stored as Float | `Decimal(14,2)` from day one — decided in §3. |
 | Free-tier API cold starts make the demo look broken | Note it in the README, or ping the API on the login page load. |
