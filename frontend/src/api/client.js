@@ -44,7 +44,10 @@ api.interceptors.response.use(
 
     // A 401 from /auth/* is a failed login, not an expired session — clearing
     // the store there would be a no-op at best. Everywhere else, clearing the
-    // token IS the redirect: routes/index.jsx swaps to the guest router.
+    // token IS the redirect: routes/index.jsx swaps to the guest router, whose
+    // catch-all sends whatever protected URL the user was on to the login page.
+    // (Without that catch-all redirect the router swaps but the URL does not,
+    // so an expired session used to land on a 404.)
     const isAuthRequest = error.config?.url?.startsWith("/auth/");
     if (status === 401 && !isAuthRequest) {
       useAuthStore.getState().logout();

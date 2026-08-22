@@ -81,7 +81,9 @@ export function NavUser({ user }) {
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
             {/* Clearing the token swaps the router tree back to guestRouter on
-                its own (routes/index.jsx), so no navigate() is needed. */}
+                its own (routes/index.jsx), so no navigate() is needed here —
+                the URL is handled by that router's catch-all redirect, which
+                is what keeps a logout from /projects/23 off the 404 page. */}
             <DropdownMenuItem onSelect={logout}>
               <LogOut />
               ออกจากระบบ

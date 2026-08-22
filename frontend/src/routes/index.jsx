@@ -53,7 +53,7 @@ import ProjectsPage from "@/pages/ProjectsPage";
 import RegisterPage from "@/pages/RegisterPage";
 import { UsersPage } from "@/pages/UsersPage";
 import { useAuthStore } from "@/store/auth.store";
-import { createBrowserRouter } from "react-router-dom";
+import { createBrowserRouter, Navigate } from "react-router-dom";
 import ProtectedRoute from "./ProtectedRoute";
 
 /** The two role sets that gate more than one route each. */
@@ -69,7 +69,23 @@ const guestRouter = createBrowserRouter([
       { path: "register", Component: RegisterPage },
     ],
   },
-  { path: "*", Component: NotFoundPage },
+  /**
+   * Redirect, NOT NotFoundPage.
+   *
+   * Swapping routers does not change the URL. Log out at /projects/23 and this
+   * tree is asked to render /projects/23, which it has no route for — the
+   * catch-all used to answer with a 404 page, so signing out from anywhere
+   * except the dashboard looked like the app had broken. The same happened
+   * when a token expired: client.js calls logout() on a 401 from wherever the
+   * user happened to be.
+   *
+   * A signed-out visitor should not be told whether a protected URL exists
+   * anyway, so sending every unmatched path to the login screen is both the
+   * fix and the more correct answer. NotFoundPage still serves real 404s
+   * inside userRouter, where the user is authenticated and the distinction
+   * between "missing" and "not yours" is one they are entitled to.
+   */
+  { path: "*", element: <Navigate to="/" replace /> },
 ]);
 
 const userRouter = createBrowserRouter([
