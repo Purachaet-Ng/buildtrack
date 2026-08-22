@@ -1,0 +1,258 @@
+### BuildTrack — task API, and the RBAC proof
+#
+# PLAN.md §7 item 4: "RBAC enforced server-side, demonstrably — include a .http
+# request showing a 403. Many candidates only hide buttons in the UI."
+#
+# The 403 blocks below are the point of this file. Every one of them is a
+# request the UI would never send, because the button is hidden — and every one
+# is refused by the API anyway.
+#
+# Run top to bottom: the @token variables are captured from the login calls.
+# Seeded password for every demo account is `password123` (see prisma/seed.js).
+
+@base = http://localhost:8000/api/v1
+
+### ─────────────────────────────────────────────────────────────
+### Logins — one per role
+### ─────────────────────────────────────────────────────────────
+
+# @name loginAdmin
+POST {{base}}/auth/login
+Content-Type: application/json
+
+{ "email": "admin@buildtrack.com", "password": "password123" }
+
+###
+@admin = {{loginAdmin.response.body.token}}
+
+# @name loginPm
+POST {{base}}/auth/login
+Content-Type: application/json
+
+{ "email": "pm@buildtrack.com", "password": "password123" }
+
+###
+@pm = {{loginPm.response.body.token}}
+
+# @name loginStaff
+POST {{base}}/auth/login
+Content-Type: application/json
+
+{ "email": "engineer@buildtrack.com", "password": "password123" }
+
+###
+@staff = {{loginStaff.response.body.token}}
+
+# @name loginClient
+POST {{base}}/auth/login
+Content-Type: application/json
+
+{ "email": "client@siamproperty.co.th", "password": "password123" }
+
+###
+@client = {{loginClient.response.body.token}}
+
+
+### ─────────────────────────────────────────────────────────────
+### Reads — scoped by project membership
+### ─────────────────────────────────────────────────────────────
+
+### ADMIN sees every task
+GET {{base}}/tasks?limit=100
+Authorization: Bearer {{admin}}
+
+### STAFF sees only tasks on projects they are staffed to (16 of 24 in the seed)
+GET {{base}}/tasks?limit=100
+Authorization: Bearer {{staff}}
+
+### CLIENT sees only tasks on projects owned by their company
+GET {{base}}/tasks?limit=100
+Authorization: Bearer {{client}}
+
+
+### ─────────────────────────────────────────────────────────────
+### Filters
+### ─────────────────────────────────────────────────────────────
+
+### Top-level tasks only. `null` is a real filter and is NOT the same as
+### omitting the param — the string "null" is converted to a SQL NULL.
+GET {{base}}/tasks?parentTaskId=null&limit=100
+Authorization: Bearer {{admin}}
+
+### The sub-tasks of one parent
+GET {{base}}/tasks?parentTaskId=76
+Authorization: Bearer {{admin}}
+
+### Everything waiting to be checked — the PM's review queue
+GET {{base}}/tasks?status=REVIEW
+Authorization: Bearer {{pm}}
+
+### My work, most urgent first
+GET {{base}}/tasks?assignedToId=36&sort=-priority
+Authorization: Bearer {{staff}}
+
+### Overdue and unfinished
+GET {{base}}/tasks?dueBefore=2026-08-22&status=IN_PROGRESS
+Authorization: Bearer {{pm}}
+
+
+### ─────────────────────────────────────────────────────────────
+### 403 — the whole point of this file
+###
+### Set @ownTask to a task assigned to engineer@buildtrack.com, and
+### @otherTask to one on the same project assigned to somebody else.
+### ─────────────────────────────────────────────────────────────
+
+@ownTask = 96
+@otherTask = 86
+@foreignTask = 94
+
+### 403 — STAFF cannot create tasks (requireRole)
+POST {{base}}/tasks
+Authorization: Bearer {{staff}}
+Content-Type: application/json
+
+{ "projectId": 25, "name": "should never exist" }
+
+### 403 — STAFF cannot delete tasks (requireRole)
+DELETE {{base}}/tasks/{{ownTask}}
+Authorization: Bearer {{staff}}
+
+### 200 — STAFF CAN move their own task along
+PATCH {{base}}/tasks/{{ownTask}}/status
+Authorization: Bearer {{staff}}
+Content-Type: application/json
+
+{ "status": "IN_PROGRESS" }
+
+### 403 — but NOT to APPROVED. Signing off your own work is exactly what the
+### REVIEW state exists to prevent. This is a per-TRANSITION rule, so no
+### role middleware can express it — see canTransitionStatus.
+PATCH {{base}}/tasks/{{ownTask}}/status
+Authorization: Bearer {{staff}}
+Content-Type: application/json
+
+{ "status": "APPROVED" }
+
+### 403 — and not on a task belonging to a colleague, even on their own project
+PATCH {{base}}/tasks/{{otherTask}}/status
+Authorization: Bearer {{staff}}
+Content-Type: application/json
+
+{ "status": "IN_PROGRESS" }
+
+### 403 — same rule for progress
+PATCH {{base}}/tasks/{{otherTask}}/progress
+Authorization: Bearer {{staff}}
+Content-Type: application/json
+
+{ "progressPercent": 90 }
+
+### 403 — a task on a project this user is not staffed to is invisible AND
+### unreachable, not merely absent from the list
+GET {{base}}/tasks/{{foreignTask}}
+Authorization: Bearer {{staff}}
+
+### 200 — a CLIENT's single permitted write in the entire application:
+### approving finished work on their own project (WORKFLOWS.md U-3.9)
+PATCH {{base}}/tasks/{{ownTask}}/status
+Authorization: Bearer {{client}}
+Content-Type: application/json
+
+{ "status": "APPROVED" }
+
+### 403 — and nothing else. A CLIENT cannot push work backwards,
+PATCH {{base}}/tasks/{{ownTask}}/status
+Authorization: Bearer {{client}}
+Content-Type: application/json
+
+{ "status": "IN_PROGRESS" }
+
+### 403 — cannot report progress,
+PATCH {{base}}/tasks/{{ownTask}}/progress
+Authorization: Bearer {{client}}
+Content-Type: application/json
+
+{ "progressPercent": 100 }
+
+### 403 — and cannot create work.
+POST {{base}}/tasks
+Authorization: Bearer {{client}}
+Content-Type: application/json
+
+{ "projectId": 25, "name": "nope" }
+
+
+### ─────────────────────────────────────────────────────────────
+### 400 — validation
+### ─────────────────────────────────────────────────────────────
+
+### 400 — progress is 0-100. The only numeric field a STAFF user can write,
+### so its bounds are the whole guard.
+PATCH {{base}}/tasks/{{ownTask}}/progress
+Authorization: Bearer {{admin}}
+Content-Type: application/json
+
+{ "progressPercent": 101 }
+
+### 400 — you cannot assign work to someone who is not on the project team.
+### Task visibility runs through membership, so this would create a task its
+### own assignee could not see.
+PATCH {{base}}/tasks/{{ownTask}}
+Authorization: Bearer {{admin}}
+Content-Type: application/json
+
+{ "assignedToId": 999999 }
+
+### 400 — a task cannot be its own parent
+PATCH {{base}}/tasks/{{ownTask}}
+Authorization: Bearer {{admin}}
+Content-Type: application/json
+
+{ "parentTaskId": {{ownTask}} }
+
+### 400 — nor nest under a parent in a different project
+PATCH {{base}}/tasks/{{ownTask}}
+Authorization: Bearer {{admin}}
+Content-Type: application/json
+
+{ "parentTaskId": 76 }
+
+
+### ─────────────────────────────────────────────────────────────
+### Write path — create a WBS, then tear it down
+### ─────────────────────────────────────────────────────────────
+
+# @name createParent
+POST {{base}}/tasks
+Authorization: Bearer {{pm}}
+Content-Type: application/json
+
+{
+  "projectId": 25,
+  "name": "งานติดตั้งระบบไฟฟ้า",
+  "description": "เดินสายไฟและติดตั้งตู้ควบคุมทั้งอาคาร",
+  "priority": "HIGH",
+  "startDate": "2026-09-01",
+  "dueDate": "2026-10-15"
+}
+
+###
+@parentId = {{createParent.response.body.task.id}}
+
+### Sub-task under it
+POST {{base}}/tasks
+Authorization: Bearer {{pm}}
+Content-Type: application/json
+
+{
+  "projectId": 25,
+  "parentTaskId": {{parentId}},
+  "name": "เดินท่อร้อยสาย",
+  "priority": "MEDIUM"
+}
+
+### Deleting the parent cascades to its sub-tasks — parentTaskId is
+### onDelete: Cascade in schema.prisma. The confirm dialog says so.
+DELETE {{base}}/tasks/{{parentId}}
+Authorization: Bearer {{pm}}

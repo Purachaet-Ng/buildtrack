@@ -3,6 +3,11 @@ export const PERMISSIONS = {
   "project:update": ["ADMIN", "PROJECT_MANAGER"],
   "project:delete": ["ADMIN"],
   "money:view": ["ADMIN", "PROJECT_MANAGER", "CLIENT"],
+  // Creating, editing and deleting work. NOT status and progress: who may move
+  // a task along depends on the ROW (are you the assignee?) and on the target
+  // value (a CLIENT may set APPROVED and nothing else), which no static matrix
+  // can express — see canTransitionStatus in backend/src/services/tasks.service.js.
+  "task:manage": ["ADMIN", "PROJECT_MANAGER"],
   // Same split as companies: reading the user list and managing users are
   // different rights. GET /users is ADMIN + PM so a PM can pick someone to add
   // to a project team; everything that writes a user is ADMIN only, which is

@@ -6,6 +6,7 @@ import authRoute from "./routes/auth.route.js";
 import projectRoute from "./routes/projects.route.js";
 import companyRoute from "./routes/companies.route.js";
 import userRoute from "./routes/users.route.js";
+import taskRoute from "./routes/tasks.route.js";
 
 const app = express();
 
@@ -31,6 +32,7 @@ app.use(`${API}/auth`, authRoute);
 app.use(`${API}/projects`, projectRoute);
 app.use(`${API}/companies`, companyRoute);
 app.use(`${API}/users`, userRoute);
+app.use(`${API}/tasks`, taskRoute);
 
 app.use(pathNotFound);
 app.use(errorHandler);

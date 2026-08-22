@@ -20,6 +20,8 @@ import { StatusChip } from "@/components/common/StatusChip";
 import { DeleteProject } from "@/components/project/DeleteProject";
 import { EditProject } from "@/components/project/EditProject";
 import { MemberList } from "@/components/project/MemberList";
+import { TaskList } from "@/components/task/TaskList";
+import { UpcomingTasks } from "@/components/task/UpcomingTasks";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -40,7 +42,6 @@ import {
   ClipboardList,
   EllipsisVertical,
   FileText,
-  ListChecks,
   Pencil,
   Trash2,
   TriangleAlert,
@@ -339,11 +340,16 @@ export function ProjectDetailPage() {
                 </dl>
               </section>
 
-              <ComingSoon
-                icon={ListChecks}
-                title="งานล่าสุด"
-                sprint="4 (Tasks & Kanban)"
-              />
+              {/* The five most urgent, as a read-only peek. The full list with
+                  its filters lives one tab over rather than being duplicated. */}
+              <section className="rounded-lg border bg-card p-5">
+                <div className="flex items-center justify-between gap-4">
+                  <h2 className="text-[15px] font-semibold text-heading">
+                    งานที่ใกล้ถึงกำหนด
+                  </h2>
+                </div>
+                <UpcomingTasks projectId={id} />
+              </section>
             </div>
 
             <div className="flex flex-col gap-6">
@@ -364,7 +370,7 @@ export function ProjectDetailPage() {
         </TabsContent>
 
         <TabsContent value="tasks" className="mt-6">
-          <ComingSoon icon={ListChecks} title="งาน" sprint="4 (Tasks & Kanban)" />
+          <TaskList projectId={id} />
         </TabsContent>
 
         <TabsContent value="reports" className="mt-6">
