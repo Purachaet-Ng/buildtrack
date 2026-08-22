@@ -1,5 +1,5 @@
 /**
- * GET    /users            ADMIN        ?page&limit&sort&q&role
+ * GET    /users            ADMIN, PM    ?page&limit&sort&q&role&companyId
  * POST   /users            ADMIN
  * GET    /users/me         All
  * PATCH  /users/me         All
@@ -7,17 +7,33 @@
  * PATCH  /users/:id        ADMIN
  * DELETE /users/:id        ADMIN
  *
- * Sprint 2 (me) / Sprint 8 (admin screens).
+ * The list returns { data: [...], pagination: { page, limit, total, totalPages } };
+ * every other helper returns the raw envelope too, same as projects.api.js —
+ * unwrapping here would hide `pagination` and `message`.
+ *
+ * `passwordHash` never appears: the backend projects every user through
+ * users.service.js `userSelect`.
  */
 
 import api from "./client.js";
 
 // ─────────────────────────────────────────────────────────────
-// GET    /users            ADMIN        ?page&limit&sort&q&role
+// GET    /users        ADMIN, PM    ?page&limit&sort&q&role&companyId
 // ─────────────────────────────────────────────────────────────
 
-export const getUsers = async (q) => {
-  const res = await api.get(`/users?${q}`);
+/**
+ * @param {object} [params] e.g. { page, limit, sort, q, role, companyId }
+ *
+ * Passed as an object rather than interpolated into the path, matching
+ * getProjects: axios encodes the values and drops the undefined ones, so a
+ * partial filter cannot produce `?role=undefined`. It also lets the hook use
+ * the same object as its cache key.
+ *
+ * Sortable fields the backend honours: createdAt, firstname, lastname, email,
+ * role. Anything else silently falls back to -createdAt.
+ */
+export const getUsers = async (params) => {
+  const res = await api.get("/users", { params });
   return res.data;
 };
 

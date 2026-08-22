@@ -24,9 +24,15 @@ const userRoute = Router();
 
 userRoute.use(requireAuth);
 
+/**
+ * ADMIN *and* PROJECT_MANAGER. A PM is allowed to staff a project
+ * (POST /projects/:id/members) but has no other way to find out who exists, so
+ * a picker on the ทีมงาน tab would have nothing to offer. Everything that
+ * WRITES a user stays ADMIN-only below.
+ */
 userRoute.get(
   "/",
-  requireRole("ADMIN"),
+  requireRole("ADMIN", "PROJECT_MANAGER"),
   validate({ query: userListQuery }),
   listUsers,
 );

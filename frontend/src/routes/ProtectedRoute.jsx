@@ -22,6 +22,7 @@ import { Outlet } from "react-router-dom";
 function ProtectedRoute({ roles, action }) {
   const { user } = useAuth();
   if (!user) return <ForbiddenPage />;
+  //check role or action
   const allowed = roles ? roles.includes(user.role) : can(user.role, action);
   return allowed ? <Outlet /> : <ForbiddenPage />;
 }

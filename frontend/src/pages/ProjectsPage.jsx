@@ -5,10 +5,16 @@
  *
  * Filtering, sorting and paging are all SERVER side — every control writes to
  * the query params of GET /projects and the response is rendered as-is. That is
- * why no row models are registered below: TanStack Table is here for the column
+ * why no row models are registered: TanStack Table is here for the column
  * definitions and header/cell plumbing, not to compute anything.
+ *
+ * The table, the card fallback, the pagination bar and the sortable headers all
+ * live in <DataTable /> — this page owns the columns, the filters and the query.
  */
 
+import { DataTable, ViewToggle } from "@/components/common/DataTable";
+import { EmptyState } from "@/components/common/EmptyState";
+import { PageHeader } from "@/components/common/PageHeader";
 import { StatusChip } from "@/components/common/StatusChip";
 import { AddProject } from "@/components/project/AddProject";
 import { DeleteProject } from "@/components/project/DeleteProject";
@@ -31,15 +37,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { SkeletonTable } from "@/components/ui/skeleton";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import { useCompanies } from "@/hooks/useCompany";
 import { useDebounce } from "@/hooks/useDebounce";
 import { usePermission } from "@/hooks/usePermission";
@@ -47,26 +44,8 @@ import { useProject } from "@/hooks/useProject";
 import { DEFAULT_PAGE_SIZE, PROJECT_STATUS_META } from "@/lib/constants";
 import { formatDate, formatMoney, formatPercent } from "@/lib/format";
 import { cn } from "@/lib/utils";
-import {
-  createColumnHelper,
-  FlexRender,
-  tableFeatures,
-  useTable,
-} from "@tanstack/react-table";
-import {
-  ArrowDown,
-  ArrowUp,
-  ArrowUpDown,
-  ChevronLeft,
-  ChevronRight,
-  EllipsisVertical,
-  Eye,
-  LayoutGrid,
-  Pencil,
-  Search,
-  Table2,
-  Trash2,
-} from "lucide-react";
+import { createColumnHelper } from "@tanstack/react-table";
+import { EllipsisVertical, Eye, Pencil, Search, Trash2 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 
@@ -89,14 +68,14 @@ const PROGRESS_TRACK = "h-1.5 bg-[#E8ECED]";
 const PROGRESS_FILL = "bg-primary-900";
 
 /**
- * Static — v9 warns against recreating features/columns/fallback data on every
- * render, and re-creating the feature set would rebuild the whole table.
+ * Static — v9 warns against recreating columns on every render, and the columns
+ * ARRAY identity has to stay stable or the whole table is rebuilt.
  */
-const features = tableFeatures({});
 const columnHelper = createColumnHelper();
-const EMPTY_PROJECTS = [];
 
-//Row Action : 3-point button
+// ------------------------------------------------------------------------------
+//Dropdown Setup
+// ------------------------------------------------------------------------------
 function RowActions({ project }) {
   const navigate = useNavigate();
   const { can } = usePermission();
@@ -115,7 +94,7 @@ function RowActions({ project }) {
           <Button
             variant="ghost"
             size="icon-sm"
-            aria-label={`การดำเนินการสำหรับ ${project.name}`}
+            aria-label={`action for ${project.name}`}
           >
             <EllipsisVertical />
           </Button>
@@ -162,8 +141,10 @@ function RowActions({ project }) {
     </>
   );
 }
+// End of Dropdown Setup
+
 // ------------------------------------------------------------------------------
-// Coloumn
+// Coloumn Setup
 // ------------------------------------------------------------------------------
 const nameColumn = columnHelper.accessor("name", {
   header: "Project Name",
@@ -241,6 +222,8 @@ const dueDateColumn = columnHelper.accessor("endDate", {
   ),
 });
 
+// id "actions" is load-bearing: DataTable stops the row click on that column so
+// opening this menu does not also navigate.
 const actionsColumn = columnHelper.display({
   id: "actions",
   header: () => <span className="sr-only">Action</span>,
@@ -271,65 +254,6 @@ const COLUMNS_NO_BUDGET = columnHelper.columns([
   dueDateColumn,
   actionsColumn,
 ]);
-
-/** A window of at most five page numbers centred on the current one. */
-function pageWindow(current, totalPages) {
-  const size = Math.min(5, totalPages);
-  const start = Math.min(
-    Math.max(1, current - Math.floor(size / 2)),
-    totalPages - size + 1,
-  );
-  return Array.from({ length: size }, (_, index) => start + index);
-}
-
-//Position at below table
-function PaginationBar({
-  firstOnPage,
-  lastOnPage,
-  total,
-  currentPage,
-  totalPages,
-  onPageChange,
-}) {
-  return (
-    <div className="flex flex-wrap items-center justify-between gap-3 border-t px-4 py-3">
-      <p className="text-[13px] text-muted-fg">
-        List {firstOnPage}-{lastOnPage} out of {total} total.
-      </p>
-      <div className="flex items-center gap-1">
-        <Button
-          variant="outline"
-          size="icon-sm"
-          aria-label="previous page"
-          disabled={currentPage <= 1}
-          onClick={() => onPageChange(currentPage - 1)}
-        >
-          <ChevronLeft />
-        </Button>
-        {pageWindow(currentPage, totalPages).map((pageNumber) => (
-          <Button
-            key={pageNumber}
-            size="icon-sm"
-            variant={pageNumber === currentPage ? "default" : "outline"}
-            aria-current={pageNumber === currentPage ? "page" : undefined}
-            onClick={() => onPageChange(pageNumber)}
-          >
-            {pageNumber}
-          </Button>
-        ))}
-        <Button
-          variant="outline"
-          size="icon-sm"
-          aria-label="next page"
-          disabled={currentPage >= totalPages}
-          onClick={() => onPageChange(currentPage + 1)}
-        >
-          <ChevronRight />
-        </Button>
-      </div>
-    </div>
-  );
-}
 
 function ProjectsPage() {
   const navigate = useNavigate();
@@ -364,7 +288,7 @@ function ProjectsPage() {
 
   const { data, isLoading, isError } = useProject(query);
 
-  const projects = data?.data ?? EMPTY_PROJECTS;
+  const projects = data?.data;
   const pagination = data?.pagination;
 
   /**
@@ -381,7 +305,7 @@ function ProjectsPage() {
 
   const [seenCompanies, setSeenCompanies] = useState([]);
   useEffect(() => {
-    if (projects.length === 0) return;
+    if (!projects || projects.length === 0) return;
 
     setSeenCompanies((previous) => {
       const byId = new Map(previous.map((company) => [company.id, company]));
@@ -408,80 +332,44 @@ function ProjectsPage() {
   // "STAFF never sees money" is expressed through the permission matrix rather
   // than a role literal in the page.
   const columns = can("money:view") ? COLUMNS : COLUMNS_NO_BUDGET;
-  const table = useTable({ features, columns, data: projects });
-
-  const toggleSort = (columnId) => {
-    setSort((previous) => (previous === columnId ? `-${columnId}` : columnId));
-  };
-
-  const sortIconFor = (columnId) => {
-    if (sort === columnId) return ArrowUp;
-    if (sort === `-${columnId}`) return ArrowDown;
-    return ArrowUpDown;
-  };
 
   const isFiltered =
     Boolean(debouncedSearch) || status !== ALL || companyId !== ALL;
-
-  const total = pagination?.total ?? projects.length;
-  const limit = pagination?.limit ?? DEFAULT_PAGE_SIZE;
-  const currentPage = pagination?.page ?? page;
-  const totalPages = pagination?.totalPages ?? 1;
-  const firstOnPage = total === 0 ? 0 : (currentPage - 1) * limit + 1;
-  const lastOnPage = Math.min(currentPage * limit, total);
 
   // AddProject carries its own trigger button and its own permission-free
   // rendering, so the gate lives here: ADMIN and PM only.
   const createButton = can("project:create") ? <AddProject /> : null;
 
-  if (isLoading) return <SkeletonTable />;
-  if (isError)
-    return <div className="text-muted-fg">โหลดข้อมูลโครงการไม่สำเร็จ</div>;
-
   const emptyState = (
-    <div className="flex flex-col items-center gap-4 px-6 py-16 text-center">
-      <p className="text-muted-fg">
-        {isFiltered
+    <EmptyState
+      description={
+        isFiltered
           ? "No projects matching the search were found."
-          : "There are no projects yet."}
-      </p>
-      {isFiltered ? (
-        <Button
-          variant="outline"
-          onClick={() => {
-            setSearch("");
-            setStatus(ALL);
-            setCompanyId(ALL);
-          }}
-        >
-          Clear the filter
-        </Button>
-      ) : (
-        createButton
-      )}
-    </div>
-  );
-
-  const paginationBar = (
-    <PaginationBar
-      firstOnPage={firstOnPage}
-      lastOnPage={lastOnPage}
-      total={total}
-      currentPage={currentPage}
-      totalPages={totalPages}
-      onPageChange={setPage}
+          : "There are no projects yet."
+      }
+      action={
+        isFiltered ? (
+          <Button
+            variant="outline"
+            onClick={() => {
+              setSearch("");
+              setStatus(ALL);
+              setCompanyId(ALL);
+            }}
+          >
+            Clear the filter
+          </Button>
+        ) : (
+          createButton
+        )
+      }
     />
   );
 
   return (
     <div className="flex flex-col gap-6">
-      {/* TITLE */}
-      <div className="flex flex-wrap items-center justify-between gap-4">
-        <h1 className="text-2xl font-semibold tracking-[-0.01em] text-heading">
-          Project
-        </h1>
-        {createButton}
-      </div>
+      <PageHeader title="Project" actions={createButton} />
+
       {/* Search Bar */}
       <div className="flex flex-wrap items-center gap-3 rounded-lg border bg-card p-4">
         <div className="relative min-w-56 flex-1">
@@ -525,133 +413,25 @@ function ProjectsPage() {
             ))}
           </SelectContent>
         </Select>
-        {/* Content Display Toggle */}
-        <div
-          role="group"
-          aria-label="Display format"
-          className="ml-auto hidden items-center gap-1 rounded-md border p-1 md:flex"
-        >
-          {[
-            { value: "table", label: "Table", Icon: Table2 },
-            { value: "card", label: "Card", Icon: LayoutGrid },
-          ].map(({ value, label, Icon }) => (
-            <Button
-              key={value}
-              type="button"
-              size="sm"
-              variant="ghost"
-              aria-pressed={view === value}
-              onClick={() => setView(value)}
-              className={cn(
-                view === value && "bg-accent text-accent-foreground",
-              )}
-            >
-              <Icon />
-              {label}
-            </Button>
-          ))}
-        </div>
+        <ViewToggle view={view} onViewChange={setView} className="ml-auto" />
       </div>
 
-      {/* Table */}
-      <div
-        className={cn(
-          "overflow-hidden rounded-lg border bg-card",
-          view === "table" ? "hidden md:block" : "hidden",
-        )}
-      >
-        {projects.length === 0 ? (
-          emptyState
-        ) : (
-          <>
-            <Table>
-              <TableHeader>
-                {table.getHeaderGroups().map((headerGroup) => (
-                  <TableRow
-                    key={headerGroup.id}
-                    className="hover:bg-transparent"
-                  >
-                    {headerGroup.headers.map((header) => {
-                      const columnId = header.column.id;
-                      const SortIcon = sortIconFor(columnId);
-
-                      return (
-                        <TableHead
-                          key={header.id}
-                          className="h-11 px-4 text-muted-fg"
-                        >
-                          {SORTABLE_COLUMNS.has(columnId) ? (
-                            // Sorting is a server round-trip, not a row model,
-                            // so the control lives here where `sort` is in
-                            // scope rather than in the static column def.
-                            <button
-                              type="button"
-                              onClick={() => toggleSort(columnId)}
-                              className="inline-flex items-center gap-1 rounded-sm hover:text-body focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-none"
-                            >
-                              <FlexRender header={header} />
-                              <SortIcon className="size-3.5" />
-                            </button>
-                          ) : (
-                            <FlexRender header={header} />
-                          )}
-                        </TableHead>
-                      );
-                    })}
-                  </TableRow>
-                ))}
-              </TableHeader>
-              <TableBody>
-                {table.getRowModel().rows.map((row) => (
-                  <TableRow
-                    key={row.id}
-                    onClick={() => navigate(`/projects/${row.original.id}`)}
-                    className="h-14 cursor-pointer hover:bg-app"
-                  >
-                    {row.getAllCells().map((cell) => (
-                      <TableCell
-                        key={cell.id}
-                        className="px-4"
-                        // The actions menu sits inside a clickable row; without
-                        // this, opening the menu also navigates away from it.
-                        onClick={
-                          cell.column.id === "actions"
-                            ? (event) => event.stopPropagation()
-                            : undefined
-                        }
-                      >
-                        <FlexRender cell={cell} />
-                      </TableCell>
-                    ))}
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-            {paginationBar}
-          </>
-        )}
-      </div>
-
-      {/* Cards*/}
-      <div
-        className={cn(
-          "flex flex-col gap-4",
-          view === "card" ? "" : "md:hidden",
-        )}
-      >
-        {projects.length === 0 ? (
-          <div className="rounded-lg border bg-card">{emptyState}</div>
-        ) : (
-          <>
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
-              {projects.map((project) => (
-                <ProjectCard key={project.id} project={project} />
-              ))}
-            </div>
-            <div className="rounded-lg border bg-card">{paginationBar}</div>
-          </>
-        )}
-      </div>
+      <DataTable
+        columns={columns}
+        data={projects}
+        isLoading={isLoading}
+        isError={isError}
+        errorMessage="โหลดข้อมูลโครงการไม่สำเร็จ"
+        sort={sort}
+        onSortChange={setSort}
+        sortableColumns={SORTABLE_COLUMNS}
+        pagination={pagination}
+        onPageChange={setPage}
+        view={view}
+        renderCard={(project) => <ProjectCard project={project} />}
+        onRowClick={(project) => navigate(`/projects/${project.id}`)}
+        empty={emptyState}
+      />
     </div>
   );
 }

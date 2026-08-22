@@ -3,6 +3,11 @@ export const PERMISSIONS = {
   "project:update": ["ADMIN", "PROJECT_MANAGER"],
   "project:delete": ["ADMIN"],
   "money:view": ["ADMIN", "PROJECT_MANAGER", "CLIENT"],
+  // Same split as companies: reading the user list and managing users are
+  // different rights. GET /users is ADMIN + PM so a PM can pick someone to add
+  // to a project team; everything that writes a user is ADMIN only, which is
+  // what still gates the /users route itself.
+  "user:view": ["ADMIN", "PROJECT_MANAGER"],
   "user:manage": ["ADMIN"],
   // Reading the company list and managing it are different rights: GET
   // /companies is ADMIN + PM, everything that writes is ADMIN only. STAFF and

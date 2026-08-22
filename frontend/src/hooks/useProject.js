@@ -3,6 +3,7 @@ import {
   editProject,
   getProject,
   getProjects,
+  getProjectSummary,
   removeProject,
 } from "@/api/projects.api";
 import {
@@ -98,5 +99,26 @@ export const useDeleteProject = () => {
   return useMutation({
     mutationFn: (id) => removeProject(id),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["projects"] }),
+  });
+};
+
+/**
+ * GET /projects/:id/summary — the KPI strip on the detail page.
+ *
+ * Returned UNWRAPPED (no envelope): { projectId, name, status, progressPercent,
+ * daysRemaining, taskCount: { total, completed, overdue }, openIssues } plus
+ * budget / spent / remaining / budgetUsedPercent for everyone except STAFF —
+ * the controller omits those four keys entirely rather than zeroing them, so
+ * test for `undefined`, never for falsiness.
+ *
+ * Its own query key rather than a field on the detail query: the numbers here
+ * are aggregates over tasks, expenses and issues, so they go stale on writes
+ * the project row itself never sees.
+ */
+export const useProjectSummary = (id) => {
+  return useQuery({
+    queryKey: ["projects", "summary", id],
+    queryFn: () => getProjectSummary(id),
+    enabled: Boolean(id),
   });
 };

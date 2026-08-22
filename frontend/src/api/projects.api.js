@@ -107,12 +107,12 @@ export const getProjectSummary = async (id) => {
 };
 
 // ─────────────────────────────────────────────────────────────
-// Budget and members — specified in APIs.md, NOT yet routed
+// Budget — specified in APIs.md, NOT yet routed
 //
-// backend/src/routes/projects.route.js currently mounts only the six above;
-// these five 404 until the backend lands them. They are written to the APIs.md
-// contract so the screens can be built against a stable signature, but do not
-// wire them into a query yet.
+// backend/src/routes/projects.route.js does not mount this one, so it 404s
+// until Sprint 6 lands it alongside the expenses endpoints. Written to the
+// APIs.md contract so BudgetBar can be built against a stable signature, but
+// do not wire it into a query yet.
 // ─────────────────────────────────────────────────────────────
 
 /** GET /projects/:id/budget — ADMIN, PM, CLIENT */
@@ -120,6 +120,14 @@ export const getProjectBudget = async (id) => {
   const res = await api.get(`/projects/${id}/budget`);
   return res.data;
 };
+
+// ─────────────────────────────────────────────────────────────
+// Members — live. All four are mounted in projects.route.js.
+//
+// The list returns `{ data: [...] }`, each row a project_member with its user
+// embedded through users.service.js `userSelect` (so no passwordHash). The
+// writes return `{ message?, member }`.
+// ─────────────────────────────────────────────────────────────
 
 /** GET /projects/:id/members — Member */
 export const getProjectMembers = async (id) => {
