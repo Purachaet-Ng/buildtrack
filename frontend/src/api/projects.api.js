@@ -14,7 +14,9 @@
  * List response is { data: [...], pagination: { page, limit, total, totalPages } }.
  * `budget` is a STRING and is absent entirely for STAFF — the backend strips it,
  * so guard on `budget === undefined` rather than assuming it is there.
- * `progressPercent` is derived server-side; it is not a column.
+ * `taskCount: { completed, total }` is derived server-side from the project's
+ * TOP-LEVEL tasks; it is not a column. It is also the whole progress figure —
+ * there is no project-level percent to read.
  * Sprint 3.
  *
  * Every helper returns the raw envelope (`res.data`), same as users.api.js —
@@ -97,9 +99,9 @@ export const removeProject = async (id) => {
 // ─────────────────────────────────────────────────────────────
 
 /**
- * { projectId, name, status, progressPercent, daysRemaining, taskCount,
- *   openIssues } plus budget / spent / remaining / budgetUsedPercent for
- * everyone except STAFF. Unwrapped — there is no envelope on this one.
+ * { projectId, name, status, daysRemaining, taskCount, openIssues } plus
+ * budget / spent / remaining / budgetUsedPercent for everyone except STAFF.
+ * Unwrapped — there is no envelope on this one.
  */
 export const getProjectSummary = async (id) => {
   const res = await api.get(`/projects/${id}/summary`);

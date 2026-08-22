@@ -179,7 +179,6 @@ export async function getProjectSummary(req, res) {
     projectId: project.id,
     name: project.name,
     status: project.status,
-    progressPercent: stats.progressPercent,
     daysRemaining: stats.daysRemaining,
     taskCount: stats.taskCount,
     openIssues: stats.openIssues,

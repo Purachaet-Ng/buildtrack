@@ -68,12 +68,42 @@ export function formatDate(isoString) {
 //   throw new Error("formatRelativeThai: not implemented (Sprint 7)");
 // }
 
-/** 72 → "72%" */
+/** 72 → "72%". Tasks only — a PROJECT is measured by formatTaskCount below. */
 export function formatPercent(value) {
   const percent = Number(value);
   if (value === null || value === undefined || Number.isNaN(percent))
     return EM_DASH;
   return `${Math.round(percent)}%`;
+}
+
+/**
+ * { completed: 5, total: 12 } → "5 / 12 งาน".
+ *
+ * Project progress is a COUNT of finished tasks, never a percentage. The only
+ * percentage available at project level would be the average of
+ * `task.progressPercent`, and that is an average of estimates — it moves when
+ * someone's mood about a task changes, not when work finishes. A completed
+ * task is a fact, so the project reports facts.
+ *
+ * A project with no tasks reads "0 / 0 งาน", not the dash: an empty project is
+ * a real state, and the dash is reserved for a value the API did not send.
+ */
+export function formatTaskCount(taskCount) {
+  if (!taskCount) return EM_DASH;
+
+  const { completed = 0, total = 0 } = taskCount;
+  return `${completed} / ${total} งาน`;
+}
+
+/**
+ * The same ratio as a 0–100 number — for the WIDTH of a progress bar and
+ * nothing else. Never render this; the label is always the count.
+ */
+export function taskCompletionPercent(taskCount) {
+  const { completed = 0, total = 0 } = taskCount ?? {};
+  if (!total) return 0;
+
+  return Math.round((completed / total) * 100);
 }
 
 /** Bytes → "2.4 MB", for the documents list. */

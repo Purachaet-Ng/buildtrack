@@ -4,13 +4,17 @@
  * Modelled on useProject.js, with one addition that matters: every mutation
  * invalidates `["projects"]` as well as `["tasks"]`.
  *
- * `project.progressPercent` is DERIVED, not stored — projects.service.js
- * averages `task.progressPercent` at read time for both the projects list and
- * GET /projects/:id/summary. So changing a task's progress silently changes
- * data cached under a completely different key, and without the second
- * invalidation the summary strip would keep showing the old number until
- * something else happened to refetch it. That is exactly the stale-UI class of
- * bug PLAN.md §6 warns about.
+ * `project.taskCount` is DERIVED, not stored — projects.service.js counts the
+ * project's top-level tasks at read time for both the projects list and
+ * GET /projects/:id/summary. So a task write silently changes data cached under
+ * a completely different key, and without the second invalidation the summary
+ * strip would keep showing the old ratio until something else happened to
+ * refetch it. That is exactly the stale-UI class of bug PLAN.md §6 warns about.
+ *
+ * Note which writes move it now: CREATE, DELETE and STATUS, since the ratio
+ * counts COMPLETED tasks. `PATCH /tasks/:id/progress` no longer feeds it at
+ * all — but it still invalidates, because the task rows on the same page do
+ * show that percent.
  */
 
 import {
@@ -30,8 +34,8 @@ import {
 } from "@tanstack/react-query";
 
 /**
- * Everything a task write can move. Tasks obviously; projects because progress
- * is averaged from them at read time.
+ * Everything a task write can move. Tasks obviously; projects because their
+ * progress ratio is counted from them at read time.
  */
 const useTaskInvalidator = () => {
   const queryClient = useQueryClient();

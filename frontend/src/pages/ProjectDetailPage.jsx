@@ -36,7 +36,12 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { usePermission } from "@/hooks/usePermission";
 import { useProjectDetail, useProjectSummary } from "@/hooks/useProject";
 import { PROJECT_STATUS_META } from "@/lib/constants";
-import { formatDate, formatMoney, formatPercent } from "@/lib/format";
+import {
+  formatDate,
+  formatMoney,
+  formatTaskCount,
+  taskCompletionPercent,
+} from "@/lib/format";
 import { cn } from "@/lib/utils";
 import {
   ClipboardList,
@@ -74,27 +79,37 @@ function Stat({ label, children, className }) {
 }
 
 /**
- * Four inline stats separated by 1px dividers — not cards (UI-PROMPT.md).
+ * Inline stats separated by 1px dividers — not cards (UI-PROMPT.md).
  *
- * STAFF gets a different four, because the backend omits budget / spent /
+ * STAFF gets a different set, because the backend omits budget / spent /
  * remaining from the summary entirely for that role. The test is on the KEY,
  * not on falsiness: a project with a zero budget is a real thing.
+ *
+ * ความคืบหน้า now spends the two numbers STAFF used to get as separate
+ * งานทั้งหมด / งานเสร็จแล้ว stats, so those are gone — repeating "5" and "12"
+ * three inches apart is noise. งานเกินกำหนด takes the free slot: `overdue` was
+ * already in the summary payload and had nowhere to show.
  */
 function SummaryStrip({ summary }) {
   const showsMoney = summary.budget !== undefined;
   const overBudget = showsMoney && Number(summary.budgetUsedPercent) > 100;
+  const overdueTasks = summary.taskCount?.overdue ?? 0;
 
   return (
     <div className="flex flex-wrap divide-x rounded-lg border bg-card px-4 py-4">
-      <Stat label="ความคืบหน้า">
-        <div className="flex items-center gap-3">
+      {/* Wider basis than its neighbours and a narrower bar: "1 / 5 งาน" is a
+          longer label than the "72%" this stat used to hold, and the four
+          stats share one row. nowrap so it breaks the row before it breaks
+          the number in half. */}
+      <Stat label="ความคืบหน้า" className="sm:flex-[1.4]">
+        <div className="flex items-center gap-2">
           <Progress
-            value={summary.progressPercent}
-            className={cn("w-24", PROGRESS_TRACK)}
+            value={taskCompletionPercent(summary.taskCount)}
+            className={cn("w-16 shrink-0", PROGRESS_TRACK)}
             indicatorClassName={PROGRESS_FILL}
           />
-          <span className="tabular font-mono text-[15px]">
-            {formatPercent(summary.progressPercent)}
+          <span className="tabular font-mono text-[15px] whitespace-nowrap">
+            {formatTaskCount(summary.taskCount)}
           </span>
         </div>
       </Stat>
@@ -131,14 +146,16 @@ function SummaryStrip({ summary }) {
         </>
       ) : (
         <>
-          <Stat label="งานทั้งหมด">
-            <span className="tabular font-mono">
-              {summary.taskCount?.total ?? 0}
-            </span>
-          </Stat>
-          <Stat label="งานเสร็จแล้ว">
-            <span className="tabular font-mono">
-              {summary.taskCount?.completed ?? 0}
+          <Stat label="งานเกินกำหนด">
+            {/* Same #B3261E the money stats use for over-budget: a late task
+                is the one number here that asks for something to be done. */}
+            <span
+              className={cn(
+                "tabular font-mono",
+                overdueTasks > 0 && "text-destructive",
+              )}
+            >
+              {overdueTasks}
             </span>
           </Stat>
           <Stat label="ปัญหาที่เปิดอยู่">

@@ -68,7 +68,7 @@ export const findProjects = async (where, { skip, limit, orderBy }) => {
     prisma.project.count({ where }),
   ]);
 
-  return { projects: await withProgress(projects), total };
+  return { projects: await withTaskCount(projects), total };
 };
 
 export const findProjectById = async (id) => {
@@ -83,8 +83,8 @@ export const findProjectById = async (id) => {
   });
   if (!project) return null;
 
-  const [withPercent] = await withProgress([project]);
-  return withPercent;
+  const [withCount] = await withTaskCount([project]);
+  return withCount;
 };
 
 /** Raw row without the includes — for ownership checks before update/delete. */
@@ -92,25 +92,69 @@ export const findProjectRow = async (id) =>
   await prisma.project.findUnique({ where: { id } });
 
 /**
- * `progressPercent` is derived from the average of task.progressPercent
- * (APIs.md) — it is never stored on the project row.
+ * Prisma `where` fragment for the tasks a project's progress is measured over.
+ *
+ * TOP-LEVEL ONLY. Sub-tasks carry the same `projectId` as their parent, so
+ * counting every row would let one task broken into three sub-tasks weigh four
+ * times as much as one that was never broken down — the number would move as
+ * the WBS is refined rather than as work gets finished. Leaves are reported,
+ * parents roll them up, the project counts the roots.
  */
-const withProgress = async (projects) => {
+const rootTasksOf = (projectIds) => ({
+  projectId: Array.isArray(projectIds) ? { in: projectIds } : projectIds,
+  parentTaskId: null,
+});
+
+/**
+ * What counts as "finished" for the progress ratio.
+ *
+ * APPROVED is in here even though the TaskStatus enum orders it BEFORE
+ * COMPLETED. A task the client has signed off is done as far as anyone
+ * standing on site is concerned — leaving it out meant a delivered, approved
+ * deliverable still read as outstanding work on the project card.
+ *
+ * The same list drives `overdue`: an approved task past its due date is not
+ * late, it is finished.
+ */
+const FINISHED_STATUSES = ["COMPLETED", "APPROVED"];
+
+/**
+ * `taskCount` is derived at read time (APIs.md) — it is never stored on the
+ * project row. Progress is "N of M tasks finished", NOT the average of
+ * `task.progressPercent`: the per-task percent is one person's estimate, and
+ * averaging estimates produces a number nobody can defend. A finished task is
+ * a fact.
+ *
+ * Distinct from the `_count.tasks` that rides along on the include — that one
+ * counts EVERY task including sub-tasks, because it answers a different
+ * question (how much a delete would take with it).
+ */
+const withTaskCount = async (projects) => {
   if (projects.length === 0) return projects;
 
+  // One round trip for both numbers: group the root tasks by status, then fold
+  // the finished buckets into `completed` and every bucket into `total`.
   const grouped = await prisma.task.groupBy({
-    by: ["projectId"],
-    where: { projectId: { in: projects.map((project) => project.id) } },
-    _avg: { progressPercent: true },
+    by: ["projectId", "status"],
+    where: rootTasksOf(projects.map((project) => project.id)),
+    _count: { _all: true },
   });
 
-  const averageByProject = new Map(
-    grouped.map((row) => [row.projectId, row._avg.progressPercent ?? 0]),
-  );
+  const countByProject = new Map();
+  for (const row of grouped) {
+    const tally = countByProject.get(row.projectId) ?? {
+      completed: 0,
+      total: 0,
+    };
+    tally.total += row._count._all;
+    if (FINISHED_STATUSES.includes(row.status))
+      tally.completed += row._count._all;
+    countByProject.set(row.projectId, tally);
+  }
 
   return projects.map((project) => ({
     ...project,
-    progressPercent: Math.round(averageByProject.get(project.id) ?? 0),
+    taskCount: countByProject.get(project.id) ?? { completed: 0, total: 0 },
   }));
 };
 
@@ -140,7 +184,9 @@ export const createProject = async (projectData, creator) => {
     include: { clientCompany: clientCompanySelect },
   });
 
-  return { ...project, progressPercent: 0 };
+  // A brand new project has no tasks — say so explicitly rather than letting
+  // the key be absent, so the card renders "0 / 0 งาน" and not a dash.
+  return { ...project, taskCount: { completed: 0, total: 0 } };
 };
 // prisma.$transaction(async (tx) => {
 //   const project = await tx.project.create({
@@ -158,7 +204,7 @@ export const createProject = async (projectData, creator) => {
 //     });
 //   }
 
-//   return { ...project, progressPercent: 0 };
+//   return { ...project, taskCount: { completed: 0, total: 0 } };
 // });
 
 export const updateProject = async (id, data) =>
@@ -183,41 +229,36 @@ const MS_PER_DAY = 24 * 60 * 60 * 1000;
 export const getProjectStats = async (project) => {
   const now = new Date();
 
-  const [
-    taskAggregate,
-    completedTasks,
-    overdueTasks,
-    expenseAggregate,
-    openIssues,
-  ] = await Promise.all([
-    prisma.task.aggregate({
-      where: { projectId: project.id },
-      _count: { _all: true },
-      _avg: { progressPercent: true },
-    }),
-    prisma.task.count({
-      where: { projectId: project.id, status: "COMPLETED" },
-    }),
-    prisma.task.count({
-      where: {
-        projectId: project.id,
-        status: { not: "COMPLETED" },
-        dueDate: { lt: now },
-      },
-    }),
-    prisma.expense.aggregate({
-      where: { projectId: project.id },
-      _sum: { amount: true },
-    }),
-    prisma.issue.count({ where: { projectId: project.id, status: "OPEN" } }),
-  ]);
+  // All three task numbers are scoped to top-level tasks by rootTasksOf, for
+  // the same reason withTaskCount is — and so the summary strip on the detail
+  // page can never disagree with the ratio on the list row.
+  const rootTasks = rootTasksOf(project.id);
+
+  const [totalTasks, completedTasks, overdueTasks, expenseAggregate, openIssues] =
+    await Promise.all([
+      prisma.task.count({ where: rootTasks }),
+      prisma.task.count({
+        where: { ...rootTasks, status: { in: FINISHED_STATUSES } },
+      }),
+      prisma.task.count({
+        where: {
+          ...rootTasks,
+          status: { notIn: FINISHED_STATUSES },
+          dueDate: { lt: now },
+        },
+      }),
+      prisma.expense.aggregate({
+        where: { projectId: project.id },
+        _sum: { amount: true },
+      }),
+      prisma.issue.count({ where: { projectId: project.id, status: "OPEN" } }),
+    ]);
 
   // Money stays Decimal all the way out — never Float (APIs.md)
   const spent = expenseAggregate._sum.amount ?? new Prisma.Decimal(0);
   const budget = project.budget; // Decimal(14,2)
 
   return {
-    progressPercent: Math.round(taskAggregate._avg.progressPercent ?? 0),
     daysRemaining: Math.ceil(
       (project.endDate.getTime() - now.getTime()) / MS_PER_DAY,
     ),
@@ -227,8 +268,10 @@ export const getProjectStats = async (project) => {
     budgetUsedPercent: budget.isZero()
       ? 0
       : Math.round((spent.toNumber() / budget.toNumber()) * 100),
+    // `completed` / `total` ARE the progress figure — the same pair the list
+    // rows carry, so both screens tell the same story.
     taskCount: {
-      total: taskAggregate._count._all,
+      total: totalTasks,
       completed: completedTasks,
       overdue: overdueTasks,
     },

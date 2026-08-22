@@ -42,7 +42,12 @@ import { useDebounce } from "@/hooks/useDebounce";
 import { usePermission } from "@/hooks/usePermission";
 import { useProject } from "@/hooks/useProject";
 import { DEFAULT_PAGE_SIZE, PROJECT_STATUS_META } from "@/lib/constants";
-import { formatDate, formatMoney, formatPercent } from "@/lib/format";
+import {
+  formatDate,
+  formatMoney,
+  formatTaskCount,
+  taskCompletionPercent,
+} from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { createColumnHelper } from "@tanstack/react-table";
 import { EllipsisVertical, Eye, Pencil, Search, Trash2 } from "lucide-react";
@@ -55,8 +60,8 @@ const ALL = "ALL";
 
 // The fields backend/src/utils/query.js will actually order by — anything else
 // silently falls back to -createdAt, so the header must not offer it.
-// progressPercent is absent on purpose: it is averaged from tasks at read time
-// and is not a column Prisma can sort on.
+// Progress is absent on purpose: it is counted from tasks at read time and is
+// not a column Prisma can sort on.
 const SORTABLE_COLUMNS = new Set(["name", "status", "budget", "endDate"]);
 
 const DEFAULT_SORT = "-createdAt";
@@ -185,19 +190,23 @@ const statusColumn = columnHelper.accessor("status", {
   ),
 });
 
-const progressColumn = columnHelper.accessor("progressPercent", {
+// display(), not accessor(): `taskCount` is an object, so there is no single
+// value for the table to sort or filter on — and the server would not order by
+// it anyway (see SORTABLE_COLUMNS).
+const progressColumn = columnHelper.display({
+  id: "progress",
   header: "Progress",
   cell: ({ row }) => {
-    const percent = row.original.progressPercent ?? 0;
+    const { taskCount } = row.original;
     return (
       <div className="flex w-40 items-center gap-3">
         <Progress
-          value={percent}
+          value={taskCompletionPercent(taskCount)}
           className={cn("flex-1", PROGRESS_TRACK)}
           indicatorClassName={PROGRESS_FILL}
         />
-        <span className="tabular w-9 shrink-0 text-right font-mono text-[13px]">
-          {formatPercent(percent)}
+        <span className="tabular shrink-0 text-right font-mono text-[13px]">
+          {formatTaskCount(taskCount)}
         </span>
       </div>
     );
@@ -413,6 +422,7 @@ function ProjectsPage() {
             ))}
           </SelectContent>
         </Select>
+        {/* Table/Grid Toggle */}
         <ViewToggle view={view} onViewChange={setView} className="ml-auto" />
       </div>
 

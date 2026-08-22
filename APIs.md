@@ -127,7 +127,9 @@ Authorization: Bearer <token>
 }
 ```
 
-> - `progressPercent` คำนวณจากค่าเฉลี่ยของ `task.progressPercent` ทุก endpoint ที่คืนโครงการ (ไม่เก็บใน DB)
+> - `taskCount: { completed, total }` คำนวณตอนอ่าน ทุก endpoint ที่คืนโครงการ (ไม่เก็บใน DB) — นับเฉพาะงาน **ระดับบนสุด** (`parentTaskId = null`) เพราะงานย่อยถือ `projectId` เดียวกับงานแม่ ถ้านับทุกแถวงานที่ถูกแตกย่อยจะมีน้ำหนักมากกว่างานที่ไม่ได้แตก
+> - ความคืบหน้าของโครงการ = **จำนวนงานที่เสร็จ / งานทั้งหมด** ไม่ใช่ % — ไม่มี `progressPercent` ระดับโครงการอีกแล้ว (`task.progressPercent` ยังอยู่ ใช้กับงานรายตัวเท่านั้น)
+> - "เสร็จ" นับทั้ง `COMPLETED` **และ** `APPROVED` — งานที่ลูกค้าเซ็นรับแล้วถือว่าจบ แม้ enum จะเรียง `APPROVED` ไว้ก่อน `COMPLETED` · `overdue` ใช้เกณฑ์เดียวกัน (งาน `APPROVED` ที่เลยกำหนดไม่นับว่าล่าช้า)
 > - **STAFF ไม่เห็นฟิลด์ `budget`** — ถูกตัดออกจาก response ทั้ง list / detail / summary
 > - `POST /projects` ถ้าผู้สร้างไม่ใช่ ADMIN จะถูกเพิ่มเป็น `project_member` อัตโนมัติ (ไม่งั้น PM จะมองไม่เห็นโครงการที่ตัวเองเพิ่งสร้าง)
 > - `PATCH /projects/:id` PM แก้ได้เฉพาะโครงการที่ตัวเองเป็นสมาชิก · ADMIN แก้ได้ทุกโครงการ
@@ -454,7 +456,7 @@ Authorization: Bearer <token>
     "name": "Bangkok Condominium",
     "status": "PLANNING",
     "budget": "25000000.00",
-    "progressPercent": 0
+    "taskCount": { "completed": 0, "total": 0 }
   }
 }
 ```
@@ -471,7 +473,6 @@ KPI ของโครงการ (ใช้กับหน้า Project Detai
 {
   "projectId": 1,
   "name": "Bangkok Condominium",
-  "progressPercent": 72,
   "daysRemaining": 85,
   "budget": "25000000.00",
   "spent": "15500000.00",
@@ -482,7 +483,7 @@ KPI ของโครงการ (ใช้กับหน้า Project Detai
 }
 ```
 
-> `progressPercent` เป็นค่าที่ **คำนวณ** จากค่าเฉลี่ยของ `task.progressPercent` ไม่ได้เก็บใน DB
+> `taskCount` เป็นค่าที่ **คำนวณ** ตอนอ่าน ไม่ได้เก็บใน DB — `completed / total` คือความคืบหน้าของโครงการ (48 งานนี้คือ **งานระดับบนสุด** ไม่รวมงานย่อย และ `overdue` นับด้วยขอบเขตเดียวกัน เพื่อไม่ให้ `overdue > total`)
 
 ---
 

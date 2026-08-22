@@ -105,8 +105,8 @@ export const useDeleteProject = () => {
 /**
  * GET /projects/:id/summary — the KPI strip on the detail page.
  *
- * Returned UNWRAPPED (no envelope): { projectId, name, status, progressPercent,
- * daysRemaining, taskCount: { total, completed, overdue }, openIssues } plus
+ * Returned UNWRAPPED (no envelope): { projectId, name, status, daysRemaining,
+ * taskCount: { total, completed, overdue }, openIssues } plus
  * budget / spent / remaining / budgetUsedPercent for everyone except STAFF —
  * the controller omits those four keys entirely rather than zeroing them, so
  * test for `undefined`, never for falsiness.

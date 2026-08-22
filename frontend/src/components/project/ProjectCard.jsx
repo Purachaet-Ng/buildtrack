@@ -6,7 +6,12 @@
 
 import { StatusChip } from "@/components/common/StatusChip";
 import { Progress } from "@/components/ui/progress";
-import { formatDate, formatMoney, formatPercent } from "@/lib/format";
+import {
+  formatDate,
+  formatMoney,
+  formatTaskCount,
+  taskCompletionPercent,
+} from "@/lib/format";
 import { Link } from "react-router-dom";
 
 function ProjectCard({ project }) {
@@ -36,14 +41,16 @@ function ProjectCard({ project }) {
         <StatusChip value={project.status} />
       </div>
 
+      {/* The bar is the ratio drawn; the label is the ratio itself. No percent
+          — see formatTaskCount. */}
       <div className="flex items-center gap-3">
         <Progress
-          value={project.progressPercent ?? 0}
+          value={taskCompletionPercent(project.taskCount)}
           className="h-1.5 flex-1 bg-[#E8ECED]"
           indicatorClassName="bg-primary-900"
         />
-        <span className="tabular w-10 shrink-0 text-right font-mono text-[13px] text-body">
-          {formatPercent(project.progressPercent ?? 0)}
+        <span className="tabular shrink-0 text-right font-mono text-[13px] text-body">
+          {formatTaskCount(project.taskCount)}
         </span>
       </div>
 
